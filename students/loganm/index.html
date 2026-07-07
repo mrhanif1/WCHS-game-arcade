@@ -1,55 +1,231 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>My GCSE Computing Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<div id="quiz" class="hidden">
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
+<h2>You Lost!</h2>
 
-    .game-box {
-      max-width: 700px;
-      margin: auto;
-      background: #1f2937;
-      padding: 25px;
-      border-radius: 15px;
-    }
+<p id="question"></p>
 
-    button {
-      display: block;
-      width: 90%;
-      max-width: 400px;
-      margin: 10px auto;
-      padding: 12px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-    }
+<input id="answer">
 
-    a {
-      color: #93c5fd;
-    }
-  </style>
-</head>
+<button onclick="checkAnswer()">Submit</button>
 
-<body>
-  <div class="game-box">
-    <h1>My GCSE Computing Game</h1>
-    <p>This is my starter page. I will turn this into an interactive GCSE revision game.</p>
+<p id="result"></p>
 
-    <button onclick="alert('Game starting soon!')">Start Game</button>
+</div>
 
-    <p>
-      <a href="../../">Back to Arcade</a>
-    </p>
-  </div>
+</div>
+
+<script src="script.js"></script>
+
 </body>
 </html>
+style.css
+body{
+
+font-family:Arial;
+background:#88d498;
+text-align:center;
+
+}
+
+canvas{
+
+background:#3dbb3d;
+border:5px solid black;
+
+}
+
+.hidden{
+
+display:none;
+
+}
+
+button{
+
+padding:10px 20px;
+margin:10px;
+font-size:18px;
+
+}
+
+input{
+
+padding:10px;
+font-size:18px;
+
+}
+script.js
+const canvas=document.getElementById("map");
+const ctx=canvas.getContext("2d");
+
+let x=250;
+let y=250;
+
+let battling=false;
+
+let playerHP=40;
+let enemyHP=30;
+
+const questions=[
+
+{
+question:"What does CPU stand for?",
+answer:"central processing unit"
+},
+
+{
+question:"What does RAM stand for?",
+answer:"random access memory"
+},
+
+{
+question:"What number system does a computer use?",
+answer:"binary"
+},
+
+{
+question:"How many bits are in one byte?",
+answer:"8"
+},
+
+{
+question:"What is an algorithm?",
+answer:"a set of instructions"
+},
+
+{
+question:"What does LAN stand for?",
+answer:"local area network"
+}
+
+];
+
+draw();
+
+function draw(){
+
+ctx.clearRect(0,0,500,500);
+
+ctx.fillStyle="green";
+ctx.fillRect(0,0,500,500);
+
+ctx.fillStyle="darkgreen";
+
+for(let i=0;i<15;i++){
+
+ctx.fillRect(Math.random()*500,Math.random()*500,20,20);
+
+}
+
+ctx.fillStyle="blue";
+ctx.fillRect(x,y,20,20);
+
+}
+
+document.addEventListener("keydown",e=>{
+
+if(battling)return;
+
+if(e.key=="ArrowUp")y-=10;
+if(e.key=="ArrowDown")y+=10;
+if(e.key=="ArrowLeft")x-=10;
+if(e.key=="ArrowRight")x+=10;
+
+draw();
+
+if(Math.random()<0.15){
+
+startBattle();
+
+}
+
+});
+
+function startBattle(){
+
+battling=true;
+
+enemyHP=30;
+playerHP=40;
+
+document.getElementById("battle").classList.remove("hidden");
+
+updateHP();
+
+}
+
+function updateHP(){
+
+playerHP=Math.max(0,playerHP);
+enemyHP=Math.max(0,enemyHP);
+
+document.getElementById("playerHP").innerHTML=playerHP;
+document.getElementById("enemyHP").innerHTML=enemyHP;
+
+}
+
+function attack(){
+
+enemyHP-=Math.floor(Math.random()*8)+5;
+
+if(enemyHP<=0){
+
+alert("You won!");
+
+document.getElementById("battle").classList.add("hidden");
+
+battling=false;
+
+return;
+
+}
+
+playerHP-=Math.floor(Math.random()*10)+4;
+
+updateHP();
+
+if(playerHP<=0){
+
+document.getElementById("battle").classList.add("hidden");
+
+showQuiz();
+
+}
+
+}
+
+let currentQuestion;
+
+function showQuiz(){
+
+document.getElementById("quiz").classList.remove("hidden");
+
+currentQuestion=questions[Math.floor(Math.random()*questions.length)];
+
+document.getElementById("question").innerHTML=currentQuestion.question;
+
+}
+
+function checkAnswer(){
+
+const ans=document.getElementById("answer").value.toLowerCase().trim();
+
+if(ans===currentQuestion.answer){
+
+document.getElementById("result").innerHTML="Correct! Continue your adventure.";
+
+document.getElementById("quiz").classList.add("hidden");
+
+document.getElementById("answer").value="";
+
+battling=false;
+
+}
+
+else{
+
+document.getElementById("result").innerHTML="Incorrect. Try again!";
+
+}
+
+}
