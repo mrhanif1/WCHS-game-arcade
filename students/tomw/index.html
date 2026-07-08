@@ -1,55 +1,142 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>My GCSE Computing Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
-
-    .game-box {
-      max-width: 700px;
-      margin: auto;
-      background: #1f2937;
-      padding: 25px;
-      border-radius: 15px;
-    }
-
-    button {
-      display: block;
-      width: 90%;
-      max-width: 400px;
-      margin: 10px auto;
-      padding: 12px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-    }
-
-    a {
-      color: #93c5fd;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Retro Tycoon</title>
+<style>
+body{
+margin:0;
+font-family:monospace;
+background:#3c8d2f;
+overflow:hidden;
+}
+#ui{
+position:absolute;
+top:10px;
+left:10px;
+background:#222;
+color:white;
+padding:10px;
+border:4px solid #000;
+}
+button{
+font-family:monospace;
+margin-top:5px;
+width:180px;
+height:35px;
+cursor:pointer;
+}
+#game{
+width:100vw;
+height:100vh;
+position:relative;
+}
+.dropper{
+width:40px;
+height:60px;
+background:#777;
+border:4px solid #444;
+position:absolute;
+top:150px;
+}
+.drop{
+width:12px;
+height:12px;
+background:gold;
+position:absolute;
+}
+</style>
 </head>
-
 <body>
-  <div class="game-box">
-    <h1>My GCSE Computing Game</h1>
-    <p>This is my starter page. I will turn this into an interactive GCSE revision game.</p>
 
-    <button onclick="alert('Game starting soon!')">Start Game</button>
+<div id="ui">
+<h2>Retro Tycoon</h2>
+Money: $<span id="money">0</span><br>
+Dropper Level: <span id="level">1</span><br><br>
 
-    <p>
-      <a href="../../">Back to Arcade</a>
-    </p>
-  </div>
+<button onclick="upgrade()">Upgrade Dropper ($50)</button>
+<button onclick="buyDropper()">Buy Dropper ($100)</button>
+</div>
+
+<div id="game"></div>
+
+<script>
+let money=0;
+let level=1;
+let price=50;
+let dropperPrice=100;
+let droppers=[100];
+
+const game=document.getElementById("game");
+
+function drawDroppers(){
+game.innerHTML="";
+droppers.forEach(x=>{
+let d=document.createElement("div");
+d.className="dropper";
+d.style.left=x+"px";
+game.appendChild(d);
+});
+}
+
+drawDroppers();
+
+function update(){
+moneyDisplay.textContent=Math.floor(money);
+levelDisplay.textContent=level;
+}
+
+const moneyDisplay=document.getElementById("money");
+const levelDisplay=document.getElementById("level");
+
+function upgrade(){
+if(money>=price){
+money-=price;
+level++;
+price=Math.floor(price*1.6);
+document.querySelector("button").innerHTML=
+"Upgrade Dropper ($"+price+")";
+}
+}
+
+function buyDropper(){
+if(money>=dropperPrice){
+money-=dropperPrice;
+droppers.push(100+droppers.length*80);
+dropperPrice=Math.floor(dropperPrice*1.7);
+document.querySelectorAll("button")[1].innerHTML=
+"Buy Dropper ($"+dropperPrice+")";
+drawDroppers();
+}
+}
+
+setInterval(()=>{
+droppers.forEach(x=>{
+let drop=document.createElement("div");
+drop.className="drop";
+drop.style.left=(x+14)+"px";
+drop.style.top="210px";
+game.appendChild(drop);
+
+let y=210;
+
+let fall=setInterval(()=>{
+y+=5;
+drop.style.top=y+"px";
+
+if(y>320){
+money+=level;
+drop.remove();
+clearInterval(fall);
+update();
+}
+},20);
+
+});
+},1000);
+
+update();
+</script>
+
 </body>
 </html>
