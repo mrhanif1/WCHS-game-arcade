@@ -1,192 +1,307 @@
-<div id="quiz" class="hidden">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mini Monster Battle GCSE Edition</title>
 
-<h2>You Lost!</h2>
-
-<p id="question"></p>
-
-<input id="answer">
-
-<button onclick="checkAnswer()">Submit</button>
-
-<p id="result"></p>
-
-</div>
-
-</div>
-
-<script src="script.js"></script>
-
-</body>
-</html>
-style.css
+<style>
 body{
-
-font-family:Arial;
-background:#88d498;
-text-align:center;
-
+    font-family:Arial,sans-serif;
+    background:#8fd3ff;
+    text-align:center;
+    margin:0;
 }
 
-canvas{
-
-background:#3dbb3d;
-border:5px solid black;
-
+#game{
+    width:650px;
+    margin:30px auto;
+    background:white;
+    border-radius:15px;
+    padding:20px;
+    box-shadow:0 0 15px rgba(0,0,0,0.3);
 }
 
-.hidden{
+.monsters{
+    display:flex;
+    justify-content:space-around;
+    margin:20px;
+}
 
-display:none;
+.card{
+    width:220px;
+    background:#eee;
+    padding:15px;
+    border-radius:10px;
+}
 
+.health{
+    height:20px;
+    background:red;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.bar{
+    height:100%;
+    background:limegreen;
+    width:100%;
 }
 
 button{
-
-padding:10px 20px;
-margin:10px;
-font-size:18px;
-
+    padding:10px 20px;
+    margin:10px;
+    font-size:16px;
+    cursor:pointer;
 }
 
-input{
-
-padding:10px;
-font-size:18px;
-
+#quiz{
+    display:none;
+    margin-top:20px;
+    background:#ffffcc;
+    padding:20px;
+    border-radius:10px;
 }
-script.js
-const canvas=document.getElementById("map");
-const ctx=canvas.getContext("2d");
 
-let x=250;
-let y=250;
+#log{
+    margin-top:15px;
+    min-height:40px;
+    font-weight:bold;
+}
+</style>
+</head>
 
-let battling=false;
+<body>
 
-let playerHP=40;
-let enemyHP=30;
+<div id="game">
+
+<h1>Mini Monster Battle</h1>
+
+<div class="monsters">
+
+<div class="card">
+<h2>Your Monster</h2>
+<h1>🦎</h1>
+
+<div class="health">
+<div id="playerBar" class="bar"></div>
+</div>
+
+<p>HP: <span id="playerHP"></span></p>
+
+</div>
+
+<div class="card">
+<h2>Wild Monster</h2>
+<h1>👾</h1>
+
+<div class="health">
+<div id="enemyBar" class="bar"></div>
+</div>
+
+<p>HP: <span id="enemyHP"></span></p>
+
+</div>
+
+</div>
+
+<button onclick="attack()">Attack</button>
+<button onclick="heal()">Heal</button>
+
+<div id="log"></div>
+
+<div id="quiz">
+
+<h2>You Lost!</h2>
+
+<p>Answer this GCSE Computer Science question to continue.</p>
+
+<h3 id="question"></h3>
+
+<div id="answers"></div>
+
+</div>
+
+</div>
+
+<script>
+
+let playerHP=100;
+let enemyHP=100;
 
 const questions=[
 
 {
-question:"What does CPU stand for?",
-answer:"central processing unit"
+q:"What does CPU stand for?",
+a:["Central Processing Unit","Computer Personal Unit","Central Program Utility","Computer Processing Utility"],
+c:0
 },
 
 {
-question:"What does RAM stand for?",
-answer:"random access memory"
+q:"Which memory is volatile?",
+a:["RAM","ROM","SSD","Hard Drive"],
+c:0
 },
 
 {
-question:"What number system does a computer use?",
-answer:"binary"
+q:"What does LAN stand for?",
+a:["Local Area Network","Large Access Network","Long Area Node","Local Access Node"],
+c:0
 },
 
 {
-question:"How many bits are in one byte?",
-answer:"8"
+q:"Binary uses which two digits?",
+a:["0 and 1","1 and 2","2 and 3","5 and 6"],
+c:0
 },
 
 {
-question:"What is an algorithm?",
-answer:"a set of instructions"
+q:"Which storage is magnetic?",
+a:["Hard Disk Drive","DVD","USB Flash Drive","SSD"],
+c:0
 },
 
 {
-question:"What does LAN stand for?",
-answer:"local area network"
+q:"What is an algorithm?",
+a:[
+"A step-by-step set of instructions",
+"A programming language",
+"A type of computer",
+"A storage device"
+],
+c:0
 }
 
 ];
 
-draw();
+updateBars();
 
-function draw(){
-
-ctx.clearRect(0,0,500,500);
-
-ctx.fillStyle="green";
-ctx.fillRect(0,0,500,500);
-
-ctx.fillStyle="darkgreen";
-
-for(let i=0;i<15;i++){
-
-ctx.fillRect(Math.random()*500,Math.random()*500,20,20);
-
-}
-
-ctx.fillStyle="blue";
-ctx.fillRect(x,y,20,20);
-
-}
-
-document.addEventListener("keydown",e=>{
-
-if(battling)return;
-
-if(e.key=="ArrowUp")y-=10;
-if(e.key=="ArrowDown")y+=10;
-if(e.key=="ArrowLeft")x-=10;
-if(e.key=="ArrowRight")x+=10;
-
-draw();
-
-if(Math.random()<0.15){
-
-startBattle();
-
-}
-
-});
-
-function startBattle(){
-
-battling=true;
-
-enemyHP=30;
-playerHP=40;
-
-document.getElementById("battle").classList.remove("hidden");
-
-updateHP();
-
-}
-
-function updateHP(){
-
-playerHP=Math.max(0,playerHP);
-enemyHP=Math.max(0,enemyHP);
+function updateBars(){
 
 document.getElementById("playerHP").innerHTML=playerHP;
 document.getElementById("enemyHP").innerHTML=enemyHP;
+
+document.getElementById("playerBar").style.width=playerHP+"%";
+document.getElementById("enemyBar").style.width=enemyHP+"%";
 
 }
 
 function attack(){
 
-enemyHP-=Math.floor(Math.random()*8)+5;
+let dmg=Math.floor(Math.random()*20)+10;
+enemyHP-=dmg;
+
+if(enemyHP<0) enemyHP=0;
+
+document.getElementById("log").innerHTML=
+"You dealt "+dmg+" damage!";
+
+updateBars();
 
 if(enemyHP<=0){
 
-alert("You won!");
+document.getElementById("log").innerHTML=
+"You won! A new enemy appears!";
 
-document.getElementById("battle").classList.add("hidden");
-
-battling=false;
+setTimeout(resetBattle,1500);
 
 return;
+}
+
+enemyTurn();
 
 }
 
-playerHP-=Math.floor(Math.random()*10)+4;
+function heal(){
 
-updateHP();
+let amount=Math.floor(Math.random()*15)+10;
+
+playerHP+=amount;
+
+if(playerHP>100)
+playerHP=100;
+
+document.getElementById("log").innerHTML=
+"You healed "+amount+" HP.";
+
+updateBars();
+
+enemyTurn();
+
+}
+
+function enemyTurn(){
+
+setTimeout(function(){
+
+let dmg=Math.floor(Math.random()*18)+8;
+
+playerHP-=dmg;
+
+if(playerHP<0) playerHP=0;
+
+document.getElementById("log").innerHTML+="<br>Enemy dealt "+dmg+" damage.";
+
+updateBars();
 
 if(playerHP<=0){
 
-document.getElementById("battle").classList.add("hidden");
+showQuiz();
+
+}
+
+},600);
+
+}
+
+function resetBattle(){
+
+playerHP=100;
+enemyHP=100;
+
+updateBars();
+
+}
+
+function showQuiz(){
+
+document.getElementById("quiz").style.display="block";
+
+let question=
+questions[Math.floor(Math.random()*questions.length)];
+
+window.currentQuestion=question;
+
+document.getElementById("question").innerHTML=question.q;
+
+let html="";
+
+question.a.forEach((answer,index)=>{
+
+html+=`<button onclick="answer(${index})">${answer}</button><br><br>`;
+
+});
+
+document.getElementById("answers").innerHTML=html;
+
+}
+
+function answer(choice){
+
+if(choice===currentQuestion.c){
+
+alert("Correct! Battle restarts!");
+
+document.getElementById("quiz").style.display="none";
+
+resetBattle();
+
+document.getElementById("log").innerHTML="";
+
+}
+
+else{
+
+alert("Incorrect! Try another GCSE question.");
 
 showQuiz();
 
@@ -194,38 +309,9 @@ showQuiz();
 
 }
 
-let currentQuestion;
+</script>
 
-function showQuiz(){
-
-document.getElementById("quiz").classList.remove("hidden");
-
-currentQuestion=questions[Math.floor(Math.random()*questions.length)];
-
-document.getElementById("question").innerHTML=currentQuestion.question;
-
-}
-
-function checkAnswer(){
-
-const ans=document.getElementById("answer").value.toLowerCase().trim();
-
-if(ans===currentQuestion.answer){
-
-document.getElementById("result").innerHTML="Correct! Continue your adventure.";
-
-document.getElementById("quiz").classList.add("hidden");
-
-document.getElementById("answer").value="";
-
-battling=false;
-
-}
-
-else{
-
-document.getElementById("result").innerHTML="Incorrect. Try again!";
-
-}
+</body>
+</html>
 
 }
