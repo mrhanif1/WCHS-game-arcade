@@ -1,55 +1,802 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My GCSE Computing Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1 Boolean Logic Race</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
+<style>
 
-    .game-box {
-      max-width: 700px;
-      margin: auto;
-      background: #1f2937;
-      padding: 25px;
-      border-radius: 15px;
-    }
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
 
-    button {
-      display: block;
-      width: 90%;
-      max-width: 400px;
-      margin: 10px auto;
-      padding: 12px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-    }
+body{
+background:#111;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+padding:20px;
+}
 
-    a {
-      color: #93c5fd;
-    }
-  </style>
+.container{
+width:100%;
+max-width:700px;
+background:#222;
+padding:20px;
+border-radius:15px;
+box-shadow:0 0 20px black;
+}
+
+h1{
+text-align:center;
+margin-bottom:15px;
+color:#ff2d2d;
+}
+
+h2{
+margin-bottom:15px;
+}
+
+#position{
+font-size:22px;
+font-weight:bold;
+margin-bottom:15px;
+text-align:center;
+color:gold;
+}
+
+#phase{
+text-align:center;
+font-size:18px;
+margin-bottom:15px;
+}
+
+#question{
+font-size:22px;
+margin-bottom:20px;
+}
+
+.answers{
+display:grid;
+grid-template-columns:1fr;
+gap:10px;
+}
+
+button{
+padding:15px;
+font-size:18px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+transition:.2s;
+}
+
+.answerBtn{
+background:#444;
+color:white;
+}
+
+.answerBtn:hover{
+background:#666;
+}
+
+#nextBtn{
+margin-top:20px;
+width:100%;
+background:#ff2d2d;
+color:white;
+display:none;
+}
+
+#restartBtn{
+margin-top:20px;
+width:100%;
+background:green;
+color:white;
+display:none;
+}
+
+#feedback{
+margin-top:20px;
+font-size:20px;
+font-weight:bold;
+min-height:40px;
+text-align:center;
+}
+
+#timer{
+margin-top:10px;
+text-align:center;
+font-size:18px;
+color:#7CFC00;
+}
+
+.hidden{
+display:none;
+}
+
+@media(max-width:600px){
+
+h1{
+font-size:28px;
+}
+
+#question{
+font-size:19px;
+}
+
+button{
+font-size:16px;
+padding:14px;
+}
+
+}
+#startScreen{
+text-align:center;
+}
+
+#startScreen ul{
+display:inline-block;
+text-align:left;
+margin:20px 0;
+}
+
+#startBtn{
+width:100%;
+background:#e10600;
+color:white;
+margin-top:20px;
+}
+
+#game{
+display:none;
+}
+
+</style>
 </head>
 
 <body>
-  <div class="game-box">
-    <h1>My GCSE Computing Game</h1>
-    <p>This is my starter page. I will turn this into an interactive GCSE revision game.</p>
 
-    <button onclick="alert('Game starting soon!')">Start Game</button>
+<div class="container">
 
-    <p>
-      <a href="../../">Back to Arcade</a>
-    </p>
-  </div>
+  <div id="startScreen">
+
+<h2>🏎️ Welcome to the F1 Boolean Logic Race!</h2>
+
+<p>Complete 5 qualifying questions to determine your starting position on the grid.</p>
+
+<p>During the race:</p>
+
+<ul>
+<li>✅ Correct answers help you overtake opponents.</li>
+<li>❌ Incorrect answers allow opponents to overtake you.</li>
+<li>⏱️ Halfway through the race you'll complete a timed pit stop.</li>
+<li>🏁 Try to finish as high as possible!</li>
+</ul>
+
+<button id="startBtn">Start Race</button>
+
+</div>
+
+<h1>🏎️ F1 Boolean Logic Race</h1>
+
+<div id="game">
+
+<div id="phase">
+Qualifying
+</div>
+
+<div id="position">
+Starting Position: --
+</div>
+
+<div id="timer"></div>
+
+<h2 id="question"></h2>
+
+<div class="answers" id="answers"></div>
+
+<div id="feedback"></div>
+
+<button id="nextBtn">
+Next Question
+</button>
+
+<button id="restartBtn">
+Restart Race
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+const qualifyingQuestions=[
+
+{
+question:"TRUE AND TRUE = ?",
+options:["TRUE","FALSE","ERROR","0"],
+answer:0
+},
+{
+question:"TRUE AND FALSE = ?",
+options:["TRUE","FALSE","ERROR","1"],
+answer:1
+},
+{
+question:"FALSE OR TRUE = ?",
+options:["TRUE","FALSE","ERROR","0"],
+answer:0
+},
+{
+question:"NOT TRUE = ?",
+options:["TRUE","FALSE","0","1"],
+answer:1
+},
+{
+question:"FALSE OR FALSE = ?",
+options:["TRUE","FALSE","ERROR","NOT"],
+answer:1
+}
+];
+
+const raceQuestions=[
+
+{
+question:"TRUE OR TRUE = ?",
+options:["TRUE","FALSE","0","1"],
+answer:0
+},
+{
+question:"NOT FALSE = ?",
+options:["TRUE","FALSE","0","1"],
+answer:0
+},
+{
+question:"TRUE AND FALSE = ?",
+options:["TRUE","FALSE","NOT","0"],
+answer:1
+},
+{
+question:"FALSE AND FALSE = ?",
+options:["TRUE","FALSE","1","NOT"],
+answer:1
+},
+{
+question:"NOT(TRUE)= ?",
+options:["TRUE","FALSE","0","1"],
+answer:1
+},
+{
+question:"NOT(FALSE)= ?",
+options:["TRUE","FALSE","ERROR","0"],
+answer:0
+},
+{
+question:"TRUE OR FALSE = ?",
+options:["TRUE","FALSE","0","1"],
+answer:0
+},
+{
+question:"FALSE OR FALSE = ?",
+options:["TRUE","FALSE","1","NOT"],
+answer:1
+},
+{
+question:"TRUE AND TRUE = ?",
+options:["TRUE","FALSE","0","1"],
+answer:0
+},
+{
+question:"NOT(NOT TRUE)= ?",
+options:["TRUE","FALSE","0","1"],
+answer:0
+},
+{
+question:"NOT(NOT FALSE)= ?",
+options:["TRUE","FALSE","0","1"],
+answer:1
+},
+{
+question:"TRUE OR (FALSE AND TRUE)= ?",
+options:["TRUE","FALSE","ERROR","0"],
+answer:0
+},
+{
+question:"(TRUE AND TRUE) OR FALSE = ?",
+options:["TRUE","FALSE","0","1"],
+answer:0
+},
+{
+question:"FALSE AND TRUE = ?",
+options:["TRUE","FALSE","NOT","0"],
+answer:1
+},
+{
+question:"TRUE OR FALSE = ?",
+options:["TRUE","FALSE","0","1"],
+answer:0
+},
+{
+question:"NOT(TRUE AND TRUE)= ?",
+options:["TRUE","FALSE","ERROR","0"],
+answer:1
+},
+{
+question:"NOT(FALSE OR FALSE)= ?",
+options:["TRUE","FALSE","0","1"],
+answer:0
+},
+{
+question:"TRUE AND (TRUE OR FALSE)= ?",
+options:["TRUE","FALSE","0","1"],
+answer:0
+},
+{
+question:"FALSE OR (FALSE AND TRUE)= ?",
+options:["TRUE","FALSE","0","1"],
+answer:1
+},
+{
+question:"NOT(TRUE OR FALSE)= ?",
+options:["TRUE","FALSE","0","1"],
+answer:1
+}
+];
+
+const question=document.getElementById("question");
+const answers=document.getElementById("answers");
+const startScreen=document.getElementById("startScreen");
+const game=document.getElementById("game");
+const startBtn=document.getElementById("startBtn");
+const feedback=document.getElementById("feedback");
+const nextBtn=document.getElementById("nextBtn");
+const restartBtn=document.getElementById("restartBtn");
+const positionText=document.getElementById("position");
+const phase=document.getElementById("phase");
+const timer=document.getElementById("timer");
+
+let qualifyingIndex=0;
+let raceIndex=0;
+
+let qualifyingCorrect=0;
+
+let position=22;
+
+let startTime=0;
+let firstQuestionTime=0;
+
+let pitStopDone=false;
+
+let pitCorrect=0;
+let pitTimes=[];
+
+let currentAnswerCorrect=false;
+function showQualifyingQuestion(){
+
+feedback.textContent="";
+nextBtn.style.display="none";
+
+startTime=Date.now();
+
+let q=qualifyingQuestions[qualifyingIndex];
+
+question.textContent=(qualifyingIndex+1)+". "+q.question;
+
+answers.innerHTML="";
+
+q.options.forEach((option,index)=>{
+
+let btn=document.createElement("button");
+
+btn.className="answerBtn";
+
+btn.textContent=option;
+
+btn.onclick=function(){
+
+if(qualifyingIndex===0){
+firstQuestionTime=(Date.now()-startTime)/1000;
+}
+
+currentAnswerCorrect=index===q.answer;
+
+if(currentAnswerCorrect){
+
+qualifyingCorrect++;
+
+feedback.textContent="✅ Correct";
+
+}else{
+
+feedback.textContent="❌ Incorrect";
+
+}
+
+document.querySelectorAll(".answerBtn").forEach(b=>b.disabled=true);
+
+nextBtn.style.display="block";
+
+};
+
+answers.appendChild(btn);
+
+});
+
+}
+
+nextBtn.onclick=function(){
+
+if(phase.textContent==="Qualifying"){
+
+qualifyingIndex++;
+
+if(qualifyingIndex<qualifyingQuestions.length){
+
+
+}else{
+
+calculateGrid();
+
+}
+
+}else{
+
+nextRaceQuestion();
+
+}
+
+};
+
+function calculateGrid(){
+
+
+position=22-(qualifyingCorrect*4);
+
+if(position<2) position=2;
+
+if(firstQuestionTime<3){
+
+position--;
+
+}
+
+if(position<1){
+
+position=1;
+
+}
+
+positionText.textContent="Starting Position: "+position;
+
+phase.textContent="Race";
+
+raceIndex=0;
+
+setTimeout(function(){
+
+showRaceQuestion();
+
+},1200);
+
+}
+
+function showRaceQuestion(){
+
+feedback.textContent="";
+
+nextBtn.style.display="none";
+
+startTime=Date.now();
+
+timer.textContent="";
+
+let q=raceQuestions[raceIndex];
+
+question.textContent=q.question;
+
+answers.innerHTML="";
+
+q.options.forEach((option,index)=>{
+
+let btn=document.createElement("button");
+
+btn.className="answerBtn";
+
+btn.textContent=option;
+
+btn.onclick=function(){
+
+checkRaceAnswer(index);
+
+};
+
+answers.appendChild(btn);
+
+});
+
+}
+
+showQualifyingQuestion();
+function checkRaceAnswer(choice){
+
+let q=raceQuestions[raceIndex];
+
+let timeTaken=(Date.now()-startTime)/1000;
+
+document.querySelectorAll(".answerBtn").forEach(btn=>btn.disabled=true);
+
+if(choice===q.answer){
+
+currentAnswerCorrect=true;
+
+feedback.textContent="✅ Correct! You overtook another driver!";
+
+position--;
+
+if(position<1){
+position=1;
+}
+
+}else{
+
+currentAnswerCorrect=false;
+
+feedback.textContent="❌ Wrong! Another driver passed you.";
+
+position++;
+
+if(position>22){
+position=22;
+}
+
+}
+
+positionText.textContent="Current Position: "+position;
+
+if(!pitStopDone && raceIndex>=9){
+
+pitStopDone=true;
+
+nextBtn.textContent="Enter Pit Stop";
+
+}else{
+
+nextBtn.textContent="Next Question";
+
+}
+
+nextBtn.style.display="block";
+
+}
+
+function nextRaceQuestion(){
+
+if(nextBtn.textContent==="Enter Pit Stop"){
+
+startPitStop();
+
+return;
+
+}
+
+raceIndex++;
+
+if(raceIndex>=raceQuestions.length){
+
+finishRace();
+
+return;
+
+}
+
+showRaceQuestion();
+
+}
+
+function startPitStop(){
+
+phase.textContent="Pit Stop";
+
+feedback.textContent="Answer the next 4 questions as quickly and accurately as possible!";
+
+question.textContent="";
+
+answers.innerHTML="";
+
+nextBtn.style.display="none";
+
+pitCorrect=0;
+
+pitTimes=[];
+
+showPitQuestion(0);
+
+}
+function showPitQuestion(index){
+
+feedback.textContent="";
+
+timer.textContent="Pit Question "+(index+1)+" of 4";
+
+startTime=Date.now();
+
+let q=raceQuestions[raceIndex+index];
+
+question.textContent=q.question;
+
+answers.innerHTML="";
+
+q.options.forEach((option,i)=>{
+
+let btn=document.createElement("button");
+
+btn.className="answerBtn";
+btn.textContent=option;
+
+btn.onclick=function(){
+
+let time=(Date.now()-startTime)/1000;
+
+pitTimes.push(time);
+
+if(i===q.answer){
+
+pitCorrect++;
+feedback.textContent="✅ Correct";
+
+}else{
+
+feedback.textContent="❌ Incorrect";
+
+}
+
+document.querySelectorAll(".answerBtn").forEach(b=>b.disabled=true);
+
+setTimeout(function(){
+
+if(index<3){
+
+showPitQuestion(index+1);
+
+}else{
+
+finishPitStop();
+
+}
+
+},800);
+
+};
+
+answers.appendChild(btn);
+
+});
+
+}
+
+function finishPitStop(){
+
+let total=0;
+
+for(let t of pitTimes){
+
+total+=t;
+
+}
+
+let average=total/pitTimes.length;
+
+phase.textContent="Race";
+
+if(pitCorrect>=3 && average<4){
+
+position-=3;
+
+feedback.textContent="🔥 Amazing pit stop! You gained 3 positions.";
+
+}
+else if(pitCorrect>=2 && average<6){
+
+position-=1;
+
+feedback.textContent="👍 Good pit stop! You gained 1 position.";
+
+}
+else{
+
+position+=2;
+
+feedback.textContent="⏱️ Slow pit stop! You lost 2 positions.";
+
+}
+
+if(position<1) position=1;
+if(position>22) position=22;
+
+positionText.textContent="Current Position: "+position;
+
+raceIndex+=4;
+
+nextBtn.textContent="Continue Race";
+nextBtn.style.display="block";
+
+}
+function finishRace(){
+
+phase.textContent="Race Finished";
+
+question.textContent="🏁 The chequered flag is out!";
+
+answers.innerHTML="";
+timer.textContent="";
+nextBtn.style.display="none";
+
+let message="";
+
+if(position===1){
+message="🏆 Great job! You won the race!";
+}
+else if(position===2 || position===3){
+message="🥈 You did good! You finished on the podium.";
+}
+else if(position>=4 && position<=10){
+message="👍 Okay race! You scored some good points.";
+}
+else{
+message="😞 Bad race. Better luck next time.";
+}
+
+feedback.innerHTML=
+"<h2>"+message+"</h2><br><h3>Final Position: "+position+" / 22</h3>";
+
+restartBtn.style.display="block";
+
+}
+
+restartBtn.onclick=function(){
+
+qualifyingIndex=0;
+raceIndex=0;
+
+qualifyingCorrect=0;
+
+position=22;
+
+pitStopDone=false;
+pitCorrect=0;
+pitTimes=[];
+
+phase.textContent="Qualifying";
+
+positionText.textContent="Starting Position: --";
+
+feedback.textContent="";
+timer.textContent="";
+
+restartBtn.style.display="none";
+nextBtn.textContent="Next Question";
+
+showQualifyingQuestion();
+
+};
+startBtn.onclick=function(){
+
+startScreen.style.display="none";
+
+game.style.display="block";
+
+showQualifyingQuestion();
+
+};
+</script>
+
 </body>
 </html>
