@@ -1,55 +1,365 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My GCSE Computing Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>GCSE Football Manager Revision</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
+<style>
+body{
+    background:#0d3b2a;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+}
 
-    .game-box {
-      max-width: 700px;
-      margin: auto;
-      background: #1f2937;
-      padding: 25px;
-      border-radius: 15px;
-    }
+.container{
+    width:800px;
+    margin:auto;
+}
 
-    button {
-      display: block;
-      width: 90%;
-      max-width: 400px;
-      margin: 10px auto;
-      padding: 12px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-    }
+button{
+    padding:10px 20px;
+    margin:8px;
+    font-size:16px;
+    cursor:pointer;
+}
 
-    a {
-      color: #93c5fd;
-    }
-  </style>
+select{
+    padding:8px;
+    font-size:16px;
+}
+
+#questionBox{
+    margin-top:30px;
+}
+
+table{
+    margin:auto;
+    border-collapse:collapse;
+    width:80%;
+}
+
+td,th{
+    border:1px solid white;
+    padding:8px;
+}
+
+.correct{
+    color:lime;
+}
+
+.wrong{
+    color:red;
+}
+</style>
+
 </head>
-
 <body>
-  <div class="game-box">
-    <h1>My GCSE Computing Game</h1>
-    <p>This is my starter page. I will turn this into an interactive GCSE revision game.</p>
 
-    <button onclick="alert('Game starting soon!')">Start Game</button>
+<div class="container">
 
-    <p>
-      <a href="../../">Back to Arcade</a>
-    </p>
-  </div>
+<h1>⚽ GCSE Football Manager ⚽</h1>
+
+<p>Choose your team:</p>
+
+<select id="teamSelect"></select>
+
+<br><br>
+
+<button onclick="startGame()">Start Season</button>
+
+<div id="game"></div>
+
+</div>
+
+<script>
+
+const teams=[
+"Accrington Stanley",
+"Barnet",
+"Bristol Rovers",
+"Cheltenham Town",
+"Chesterfield",
+"Colchester United",
+"Crawley Town",
+"Crewe Alexandra",
+"Exeter City",
+"Fleetwood Town",
+"Gillingham",
+"Grimsby Town",
+"Newport County",
+"Northampton",
+"Port Vale",
+"Oldham Athletic",
+"Rochdale",
+"Rotherham",
+"Salford City",
+"Shrewsbury",
+"Swindon Town",
+"Tranmere Rovers",
+"Walsall",
+"York City"
+];
+
+const questions=[
+
+{
+q:"What is 8 × 7?",
+a:["54","56","63","48"],
+c:1
+},
+{
+q:"What is the capital of France?",
+a:["Berlin","Paris","Madrid","Rome"],
+c:1
+},
+{
+q:"Which gas do plants absorb?",
+a:["Oxygen","Nitrogen","Carbon Dioxide","Helium"],
+c:2
+},
+{
+q:"Who wrote Macbeth?",
+a:["Dickens","Shakespeare","Rowling","Austen"],
+c:1
+},
+{
+q:"9² = ?",
+a:["81","72","99","90"],
+c:0
+},
+{
+q:"H2O is?",
+a:["Salt","Water","Hydrogen","Acid"],
+c:1
+},
+{
+q:"What planet is known as the Red Planet?",
+a:["Mars","Venus","Earth","Mercury"],
+c:0
+},
+{
+q:"Simplify 5+6",
+a:["10","11","12","13"],
+c:1
+},
+{
+q:"Which language is spoken in Spain?",
+a:["Italian","Spanish","French","German"],
+c:1
+},
+{
+q:"What is 100/4?",
+a:["20","25","30","15"],
+c:1
+},
+{
+q:"Triangle has how many sides?",
+a:["2","3","4","5"],
+c:1
+},
+{
+q:"Largest ocean?",
+a:["Atlantic","Indian","Pacific","Arctic"],
+c:2
+},
+{
+q:"7 x 8?",
+a:["54","56","49","64"],
+c:1
+},
+{
+q:"Square root of 64?",
+a:["6","7","8","9"],
+c:2
+}
+];
+
+let playerPoints=0;
+let currentQuestion=0;
+let playoffCorrect=0;
+
+teams.forEach(team=>{
+let option=document.createElement("option");
+option.textContent=team;
+teamSelect.appendChild(option);
+});
+
+function startGame(){
+
+playerPoints=0;
+currentQuestion=0;
+playoffCorrect=0;
+
+document.getElementById("game").innerHTML="";
+
+askQuestion();
+
+}
+
+function askQuestion(){
+
+if(currentQuestion>=12){
+finishSeason();
+return;
+}
+
+let q=questions[currentQuestion];
+
+let html=`<div id='questionBox'>
+<h2>Question ${currentQuestion+1}/12</h2>
+<h3>${q.q}</h3>`;
+
+q.a.forEach((answer,index)=>{
+html+=`<button onclick='answer(${index})'>${answer}</button><br>`;
+});
+
+html+="</div>";
+
+game.innerHTML=html;
+
+}
+
+function answer(choice){
+
+let q=questions[currentQuestion];
+
+if(choice===q.c){
+playerPoints+=3;
+}
+
+currentQuestion++;
+
+askQuestion();
+
+}
+
+function finishSeason(){
+
+let playerTeam=teamSelect.value;
+
+let league=[];
+
+teams.forEach(team=>{
+
+if(team===playerTeam){
+
+league.push({
+team:team,
+points:playerPoints
+});
+
+}else{
+
+league.push({
+team:team,
+points:Math.floor(Math.random()*36)+1
+});
+
+}
+
+});
+
+league.sort((a,b)=>b.points-a.points);
+
+let html="<h2>Final League Table</h2>";
+
+html+="<table>";
+
+html+="<tr><th>Pos</th><th>Team</th><th>Pts</th></tr>";
+
+let position=0;
+
+league.forEach((club,index)=>{
+
+html+=`<tr>
+<td>${index+1}</td>
+<td>${club.team}</td>
+<td>${club.points}</td>
+</tr>`;
+
+if(club.team===playerTeam)
+position=index+1;
+
+});
+
+html+="</table>";
+
+if(position<=2){
+
+html+="<h1 class='correct'>🏆 Automatic Promotion! You Win!</h1>";
+
+}
+else if(position<=6){
+
+html+=`
+<h2>You qualified for the Playoffs!</h2>
+<p>Answer TWO questions correctly to win.</p>
+<button onclick='playoffs()'>Start Playoffs</button>
+`;
+
+}
+else{
+
+html+="<h1 class='wrong'>Season Over. Play Again!</h1>";
+
+}
+
+game.innerHTML=html;
+
+}
+
+function playoffs(){
+
+playoffCorrect=0;
+
+playoffRound(0);
+
+}
+
+function playoffRound(round){
+
+let q=questions[Math.floor(Math.random()*questions.length)];
+
+let html=`<h2>Playoff Question ${round+1}/2</h2>
+<h3>${q.q}</h3>`;
+
+q.a.forEach((ans,index)=>{
+
+html+=`<button onclick='playoffAnswer(${index},${q.c},${round})'>${ans}</button><br>`;
+
+});
+
+game.innerHTML=html;
+
+}
+
+function playoffAnswer(choice,correct,round){
+
+if(choice===correct)
+playoffCorrect++;
+
+if(round===1){
+
+if(playoffCorrect===2){
+
+game.innerHTML="<h1 class='correct'>🏆 You Won the Playoffs!</h1>";
+
+}else{
+
+game.innerHTML="<h1 class='wrong'>Playoff Defeat! Try Again.</h1>";
+
+}
+
+}else{
+
+playoffRound(1);
+
+}
+
+}
+
+</script>
+
 </body>
 </html>
