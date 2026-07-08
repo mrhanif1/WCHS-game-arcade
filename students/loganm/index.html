@@ -1,104 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Mini Monster Battle GCSE Edition</title>
+<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Monster Battle</title>
 <style>
-body{font-family:Arial,sans-serif;background:#8fd3ff;text-align:center;margin:0}
-#game{width:700px;margin:30px auto;background:#fff;border-radius:15px;padding:20px;box-shadow:0 0 15px rgba(0,0,0,.3)}
-.monsters{display:flex;justify-content:space-around;margin:20px}
-.card{width:260px;background:#eee;padding:15px;border-radius:10px}
-.health{height:20px;background:#b00;border-radius:10px;overflow:hidden}
-.bar{height:100%;background:#2ecc71;width:100%}
-.xpwrap{height:12px;background:#999;border-radius:8px;overflow:hidden}
-.xpbar{height:100%;background:#3498db;width:0%}
-button{padding:10px 18px;margin:8px}
-#quiz{display:none;background:#ffffcc;padding:15px;border-radius:10px}
-#log{min-height:60px;font-weight:bold}
-</style>
-</head>
-<body>
-<div id="game">
+body{font-family:Arial;background:#8fd3ff;text-align:center}#game{max-width:760px;margin:20px auto;background:#fff;padding:20px;border-radius:12px}.health,.xp{background:#999;height:18px;border-radius:9px;overflow:hidden}.fill{background:#2ecc71;height:100%}.xp .fill{background:#3498db}button{margin:5px;padding:10px}
+</style></head><body><div id='game'>
 <h1>Mini Monster Battle</h1>
-<div class="monsters">
-<div class="card">
-<h2>Your Monster 🦎</h2>
-<div class="health"><div id="playerBar" class="bar"></div></div>
-<p>HP: <span id="playerHP"></span>/<span id="maxHP"></span></p>
-<p>Level: <span id="level"></span></p>
-<p>XP: <span id="xp"></span>/<span id="xpNeed"></span></p>
-<div class="xpwrap"><div id="xpBar" class="xpbar"></div></div>
-</div>
-<div class="card">
-<h2>Wild Monster 👾</h2>
-<div class="health"><div id="enemyBar" class="bar"></div></div>
-<p>HP: <span id="enemyHP"></span>/<span id="enemyMax"></span></p>
-<p>Enemy Level: <span id="enemyLevel"></span></p>
-</div>
-</div>
-<button onclick="attack()">Attack</button>
-<button onclick="heal()">Heal</button>
-<div id="log"></div>
-<div id="quiz">
-<h2>You Lost!</h2>
-<p>Answer correctly to continue.</p>
-<h3 id="question"></h3>
-<div id="answers"></div>
-</div>
-</div>
-<script>
-const questions=[
-{q:"What does CPU stand for?",a:["Central Processing Unit","Computer Personal Unit","Central Program Utility","Computer Processing Utility"],c:0},
-{q:"Which memory is volatile?",a:["RAM","ROM","SSD","Hard Drive"],c:0},
-{q:"What does LAN stand for?",a:["Local Area Network","Large Access Network","Long Area Node","Local Access Node"],c:0},
-{q:"Binary uses which two digits?",a:["0 and 1","1 and 2","2 and 3","5 and 6"],c:0},
-{q:"What is an algorithm?",a:["A step-by-step set of instructions","Programming language","Storage device","CPU"],c:0}
-];
-let save=JSON.parse(localStorage.getItem("monsterSave")||"null");
-let level=save?.level||1,xp=save?.xp||0,xpNeed=save?.xpNeed||100,maxHP=save?.maxHP||100;
-let playerHP=maxHP;
-let enemyLevel=level;
-let enemyMax=80+enemyLevel*20;
-let enemyHP=enemyMax;
-function saveGame(){localStorage.setItem("monsterSave",JSON.stringify({level,xp,xpNeed,maxHP}));}
-function newEnemy(){enemyLevel=Math.max(1,level+Math.floor(Math.random()*3)-1);enemyMax=80+enemyLevel*20;enemyHP=enemyMax;playerHP=Math.min(playerHP,maxHP);update();}
-function update(){
-playerHP=Math.max(0,playerHP);enemyHP=Math.max(0,enemyHP);
-playerBar.style.width=(playerHP/maxHP*100)+"%";
-enemyBar.style.width=(enemyHP/enemyMax*100)+"%";
-xpBar.style.width=(xp/xpNeed*100)+"%";
-playerHP.textContent=playerHP;maxHP.textContent=maxHP;enemyHP.textContent=enemyHP;enemyMax.textContent=enemyMax;
-level.textContent=level;xp.textContent=xp;xpNeed.textContent=xpNeed;enemyLevel.textContent=enemyLevel;
-}
-function gainXP(a){
-xp+=a;log.innerHTML+="<br>Gained "+a+" XP!";
-while(xp>=xpNeed){xp-=xpNeed;level++;xpNeed+=50;maxHP+=20;playerHP=maxHP;log.innerHTML+="<br><b>Level Up! Level "+level+"</b>";}
-saveGame();update();
-}
-function attack(){
-let dmg=Math.floor(Math.random()*10)+10+level*2;
-enemyHP-=dmg;log.innerHTML="You dealt "+dmg+" damage.";update();
-if(enemyHP<=0){let reward=25+enemyLevel*10;gainXP(reward);setTimeout(()=>{log.innerHTML+="<br>A new monster appeared!";newEnemy();},800);return;}
-enemyTurn();
-}
-function heal(){
-let amt=15+level*2;playerHP=Math.min(maxHP,playerHP+amt);log.innerHTML="You healed "+amt+" HP.";update();enemyTurn();
-}
-function enemyTurn(){
-setTimeout(()=>{let dmg=Math.floor(Math.random()*8)+8+enemyLevel*2;playerHP-=dmg;log.innerHTML+="<br>Enemy dealt "+dmg+" damage.";update();if(playerHP<=0)showQuiz();},500);
-}
-function showQuiz(){
-quiz.style.display="block";
-let qu=questions[Math.floor(Math.random()*questions.length)];
-window.current=qu;question.textContent=qu.q;
-answers.innerHTML="";
-qu.a.forEach((ans,i)=>{let b=document.createElement("button");b.textContent=ans;b.onclick=()=>answer(i);answers.appendChild(b);answers.appendChild(document.createElement("br"));});
-}
-function answer(i){
-if(i===current.c){alert("Correct!");quiz.style.display="none";playerHP=maxHP;newEnemy();log.innerHTML="Battle restarted.";}
-else{alert("Incorrect.");showQuiz();}
-}
-update();
-</script>
-</body>
-</html>
+<p>Level <span id=lvl></span> | XP <span id=xp></span>/<span id=need></span></p>
+<div class='xp'><div id=xpfill class='fill'></div></div>
+<p>Your HP <span id=php></span>/<span id=mhp></span></p><div class='health'><div id=pfill class='fill'></div></div>
+<p>Enemy Lv <span id=elv></span> HP <span id=ehp></span>/<span id=emhp></span></p><div class='health'><div id=efill class='fill'></div></div>
+<div>
+<button onclick="move('scratch')">Scratch</button>
+<button onclick="move('fire')">Fire Blast</button>
+<button onclick="move('heal')">Heal Pulse</button>
+<button onclick="move('power')">Power Strike</button>
+</div><div id=log></div>
+<div id=quiz style='display:none'><h3>Answer to continue</h3><p id=q></p><div id=ans></div></div>
+</div><script>
+const qs=[{q:'CPU stands for?',a:['Central Processing Unit','Computer Personal Unit'],c:0}];
+let s=JSON.parse(localStorage.getItem('mbsave')||'{}');
+let L=s.L||1,XP=s.XP||0,N=s.N||100,M=s.M||100,HP=M,cool=0;
+let eL=L,eM=80+eL*20,eHP=eM;
+function save(){localStorage.setItem('mbsave',JSON.stringify({L,XP,N,M}))}
+function ui(){lvl.textContent=L;xp.textContent=XP;need.textContent=N;mhp.textContent=M;php.textContent=HP;elv.textContent=eL;emhp.textContent=eM;ehp.textContent=eHP;pfill.style.width=HP/M*100+'%';efill.style.width=eHP/eM*100+'%';xpfill.style.width=XP/N*100+'%'}
+function gain(v){XP+=v;while(XP>=N){XP-=N;L++;N+=50;M+=20;HP=M;log.innerHTML+='<br><b>Level Up!</b>';}save();ui();}
+function newEnemy(){HP=M;eL=Math.max(1,L+Math.floor(Math.random()*3)-1);eM=80+eL*20;eHP=eM;cool=0;ui();}
+function enemy(){if(eHP<=0)return;let d=8+Math.floor(Math.random()*8)+eL*2;HP=Math.max(0,HP-d);log.innerHTML+='<br>Enemy hit '+d;if(HP<=0)quiz();ui();}
+function move(m){let d=0;
+if(m=='scratch')d=10+Math.floor(Math.random()*11)+L*2;
+if(m=='fire'){if(Math.random()<0.8)d=20+Math.floor(Math.random()*16)+L*2;else{log.innerHTML='Fire Blast missed!';enemy();return;}}
+if(m=='heal'){HP=Math.min(M,HP+25+L*2);log.innerHTML='Heal Pulse restored HP';ui();enemy();return;}
+if(m=='power'){if(cool>0){log.innerHTML='Power Strike cooling down!';enemy();return;}d=35+L*3;cool=2;}
+if(cool>0)cool--;
+eHP=Math.max(0,eHP-d);log.innerHTML='You dealt '+d;
+if(eHP<=0){gain(25+eL*10);log.innerHTML+='<br>Victory! Fully healed.';setTimeout(newEnemy,800);} else {ui();enemy();}}
+function quiz(){quiz.style.display='block';let x=qs[0];q.textContent=x.q;ans.innerHTML='';x.a.forEach((t,i)=>{let b=document.createElement('button');b.textContent=t;b.onclick=()=>{if(i==x.c){quiz.style.display='none';newEnemy();}else alert('Try again');};ans.appendChild(b);});}
+ui();
+</script></body></html>
