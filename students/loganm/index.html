@@ -23,6 +23,7 @@
     --enemy:#d9534f;
     --boss:#c2185b;
     --boss-glow:#ff2e63;
+    --stat:#7c5cff;
   }
   *{box-sizing:border-box}
   body{
@@ -112,7 +113,7 @@
     font-family:'Cinzel',serif;
     color:var(--gold);
     font-size:1rem;
-    margin:18px 0 8px;
+    margin:0 0 8px;
     border-bottom:1px solid var(--line);
     padding-bottom:6px;
   }
@@ -149,9 +150,58 @@
     letter-spacing:.04em;padding:12px;font-size:1rem;
   }
   #shopToggle:hover{filter:brightness(1.08)}
-  #shop{
+
+  #panelWrap{
     display:none;
     margin-top:16px;
+  }
+  .tabs{display:flex;gap:8px;margin-bottom:12px}
+  .tab-btn{
+    flex:1;
+    background:#1c1433;
+    border:1px solid var(--line);
+    padding:10px;
+    font-family:'Cinzel',serif;
+    font-weight:700;
+    font-size:.85rem;
+    letter-spacing:.03em;
+    color:var(--dim);
+  }
+  .tab-btn.active{
+    color:#1a0e08;
+    background:linear-gradient(90deg,var(--gold),#f0c675);
+    border-color:var(--gold);
+  }
+  .tab-panel{display:none}
+  .tab-panel.active{display:block}
+
+  #stats{
+    background:#150d29;
+    border:1px solid var(--stat);
+    border-radius:12px;
+    padding:16px;
+  }
+  .stat-item{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    padding:12px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .stat-item:last-child{border-bottom:none}
+  .stat-item .info{flex:1}
+  .stat-item .name{font-weight:700;color:var(--cream)}
+  .stat-item .desc{font-size:.78rem;color:var(--dim);margin-top:2px}
+  .stat-item .lvl{font-size:.72rem;color:var(--stat);margin-top:2px;font-weight:600}
+  .stat-btn{
+    background:var(--stat);
+    color:#fff;
+    border:none;
+    min-width:92px;
+    font-weight:700;
+  }
+  .stat-btn:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px)}
+
+  #shop{
+    display:block;
     background:#150d29;
     border:1px solid var(--gold-dim);
     border-radius:12px;
@@ -191,6 +241,7 @@
   #log b{color:var(--gold)}
   #log b.boss-text{color:var(--boss-glow)}
   #log b.wind-text{color:var(--hp)}
+  #log b.dodge-text{color:var(--stat)}
   #quiz{
     display:none;
     margin-top:16px;
@@ -269,9 +320,22 @@
     </button>
   </div>
 
-  <button id="shopToggle" onclick="toggleShop()">&#9878; Open the Merchant's Shop</button>
+  <button id="shopToggle" onclick="togglePanel()">&#9878; Open Character Menu</button>
 
-  <div id="shop"></div>
+  <div id="panelWrap">
+    <div class="tabs">
+      <button class="tab-btn active" id="tabStatsBtn" onclick="switchTab('stats')">&#9876; Stats</button>
+      <button class="tab-btn" id="tabShopBtn" onclick="switchTab('shop')">&#9878; Shop</button>
+    </div>
+
+    <div class="tab-panel active" id="tabStats">
+      <div id="stats"></div>
+    </div>
+
+    <div class="tab-panel" id="tabShop">
+      <div id="shop"></div>
+    </div>
+  </div>
 
   <div id="log">Your adventure begins&hellip;</div>
 
@@ -313,6 +377,7 @@ let s = JSON.parse(localStorage.getItem('mbsave') || '{}');
 let L = s.L || 1, XP = s.XP || 0, N = s.N || 100, M = s.M || 100;
 let gold = s.gold || 0;
 let up = Object.assign({atk:0, hp:0, heal:0, cool:0, crit:0, armor:0, luck:0, wind:0, focus:0, swift:0}, s.up || {});
+let stats = Object.assign({str:0, vit:0, agi:0, wis:0}, s.stats || {});
 let HP = (s.HP !== undefined ? s.HP : M);
 let defeats = s.defeats || 0;
 let cool = 0;
@@ -320,6 +385,42 @@ let windCharges = 0;
 
 let eL = L, eM = 80 + eL*20, eHP = eM, eName = ENEMY_NAMES[0], isBoss = false;
 
+/* ---------- core stat system ---------- */
+const STAT_ITEMS = [
+  {
+    key:'str', name:'Strength', icon:'&#128170;',
+    desc:'Adds +2 damage to every attack move per point.'
+  },
+  {
+    key:'vit', name:'Vitality', icon:'&#10084;',
+    desc:'Adds +10 max HP per point and heals you fully on purchase.'
+  },
+  {
+    key:'agi', name:'Agility', icon:'&#127939;',
+    desc:'Adds +2% critical hit chance and +1% dodge chance per point.'
+  },
+  {
+    key:'wis', name:'Wisdom', icon:'&#128302;',
+    desc:'Adds +5 Heal Pulse power and +2% gold gain per point.'
+  }
+];
+
+function statCost(key){
+  const lvl = stats[key];
+  return Math.round(20 * Math.pow(1.15, lvl));
+}
+
+function buyStat(key){
+  const cost = statCost(key);
+  if(gold < cost) return;
+  gold -= cost;
+  stats[key] += 1;
+  if(key === 'vit'){ M += 10; HP = M; }
+  log(`Trained <b>${STAT_ITEMS.find(x=>x.key===key).name}</b>!`, true);
+  ui();
+}
+
+/* ---------- shop items (gear) ---------- */
 const SHOP_ITEMS = [
   {
     key:'atk', name:'Sharpen Claws', icon:'&#9876;', cat:'Offense',
@@ -385,14 +486,17 @@ const SHOP_ITEMS = [
 
 function costOf(item){ return item.baseCost + up[item.key]*item.step; }
 function powerCooldown(){ return Math.max(0, 2 - up.cool); }
-function critChance(){ return up.crit * 0.05; }
+function critChance(){ return up.crit * 0.05 + stats.agi * 0.02; }
 function critMultiplier(){ return 1.5 + up.focus * 0.1; }
 function armorReduction(){ return Math.min(0.6, up.armor * 0.03); }
-function goldMultiplier(){ return 1 + up.luck * 0.1; }
+function dodgeChance(){ return Math.min(0.5, stats.agi * 0.01); }
+function goldMultiplier(){ return 1 + up.luck * 0.1 + stats.wis * 0.02; }
 function fireMissChance(){ return Math.max(0, 0.2 - up.swift * 0.05); }
+function strBonus(){ return stats.str; }
+function wisHealBonus(){ return stats.wis * 5; }
 
 function save(){
-  localStorage.setItem('mbsave', JSON.stringify({L,XP,N,M,gold,up,HP,defeats}));
+  localStorage.setItem('mbsave', JSON.stringify({L,XP,N,M,gold,up,stats,HP,defeats}));
 }
 
 /* ---------- UI ---------- */
@@ -424,14 +528,15 @@ function ui(){
     ? ''
     : `Next boss in ${untilBoss} win${untilBoss===1?'':'s'}`;
 
-  document.getElementById('d-scratch').textContent = `~${10+L*2+up.atk*2}-${20+L*2+up.atk*2} dmg`;
-  document.getElementById('d-fire').textContent = `~${20+L*2+up.atk*3}-${35+L*2+up.atk*3} dmg (${Math.round((1-fireMissChance())*100)}%)`;
-  document.getElementById('d-heal').textContent = `+${25+L*2+up.heal*5} HP`;
+  document.getElementById('d-scratch').textContent = `~${10+L*2+up.atk*2+strBonus()}-${20+L*2+up.atk*2+strBonus()} dmg`;
+  document.getElementById('d-fire').textContent = `~${20+L*2+up.atk*3+strBonus()}-${35+L*2+up.atk*3+strBonus()} dmg (${Math.round((1-fireMissChance())*100)}%)`;
+  document.getElementById('d-heal').textContent = `+${25+L*2+up.heal*5+wisHealBonus()} HP`;
   document.getElementById('d-power').textContent = cool>0
     ? `cooling down (${cool})`
-    : `${35+L*3+up.atk*4} dmg, ${powerCooldown()} turn CD`;
+    : `${35+L*3+up.atk*4+strBonus()} dmg, ${powerCooldown()} turn CD`;
   powerBtn.disabled = cool>0;
 
+  renderStats();
   renderShop();
   save();
 }
@@ -442,20 +547,59 @@ function log(msg, append){
   el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
 }
 
-/* ---------- shop ---------- */
-function toggleShop(){
-  const el=document.getElementById('shop');
+/* ---------- panel / tabs ---------- */
+function togglePanel(){
+  const el=document.getElementById('panelWrap');
   const open = el.style.display==='block';
   el.style.display = open ? 'none' : 'block';
   document.getElementById('shopToggle').innerHTML = open
-    ? "&#9878; Open the Merchant's Shop"
-    : "&#9878; Close the Merchant's Shop";
-  if(!open) renderShop();
+    ? "&#9878; Open Character Menu"
+    : "&#9878; Close Character Menu";
+  if(!open){ renderStats(); renderShop(); }
 }
 
+function switchTab(name){
+  const isStats = name==='stats';
+  document.getElementById('tabStats').classList.toggle('active', isStats);
+  document.getElementById('tabShop').classList.toggle('active', !isStats);
+  document.getElementById('tabStatsBtn').classList.toggle('active', isStats);
+  document.getElementById('tabShopBtn').classList.toggle('active', !isStats);
+  if(isStats) renderStats(); else renderShop();
+}
+
+/* ---------- stats panel ---------- */
+function renderStats(){
+  const el=document.getElementById('stats');
+  if(document.getElementById('panelWrap').style.display!=='block') return;
+  if(!document.getElementById('tabStats').classList.contains('active')) return;
+  el.innerHTML='<div class="panel-title">Hero Stats</div>';
+  STAT_ITEMS.forEach(item=>{
+    const lvl = stats[item.key];
+    const cost = statCost(item.key);
+    const div=document.createElement('div');
+    div.className='stat-item';
+    div.innerHTML = `
+      <div class="info">
+        <div class="name">${item.icon} ${item.name}</div>
+        <div class="desc">${item.desc}</div>
+        <div class="lvl">Level: ${lvl}</div>
+      </div>
+    `;
+    const btn=document.createElement('button');
+    btn.className='stat-btn';
+    btn.textContent = `Train (${cost}\u2666)`;
+    btn.disabled = gold < cost;
+    btn.onclick = ()=> buyStat(item.key);
+    div.appendChild(btn);
+    el.appendChild(div);
+  });
+}
+
+/* ---------- shop panel ---------- */
 function renderShop(){
   const el=document.getElementById('shop');
-  if(el.style.display!=='block') return;
+  if(document.getElementById('panelWrap').style.display!=='block') return;
+  if(!document.getElementById('tabShop').classList.contains('active')) return;
   el.innerHTML='<div class="panel-title">Merchant\'s Shop</div>';
   let lastCat = null;
   SHOP_ITEMS.forEach(item=>{
@@ -545,6 +689,13 @@ function applyIncoming(rawDamage){
 
 function enemy(){
   if(eHP <= 0) return;
+
+  if(Math.random() < dodgeChance()){
+    log(`<b class="dodge-text">You dodge the attack!</b>`, true);
+    ui();
+    return;
+  }
+
   let d = 8 + Math.floor(Math.random()*8) + eL*2;
 
   if(isBoss){
@@ -571,12 +722,12 @@ function move(m){
   let d = 0, crit = false;
 
   if(m === 'scratch'){
-    d = 10 + Math.floor(Math.random()*11) + L*2 + up.atk*2;
+    d = 10 + Math.floor(Math.random()*11) + L*2 + up.atk*2 + strBonus();
     crit = rollCrit();
   }
   if(m === 'fire'){
     if(Math.random() >= fireMissChance()){
-      d = 20 + Math.floor(Math.random()*16) + L*2 + up.atk*3;
+      d = 20 + Math.floor(Math.random()*16) + L*2 + up.atk*3 + strBonus();
       crit = rollCrit();
     } else {
       log('Fire Blast missed!');
@@ -584,7 +735,7 @@ function move(m){
     }
   }
   if(m === 'heal'){
-    const h = 25 + L*2 + up.heal*5;
+    const h = 25 + L*2 + up.heal*5 + wisHealBonus();
     HP = Math.min(M, HP + h);
     log('Heal Pulse restored '+h+' HP');
     ui(); enemy(); return;
@@ -594,7 +745,7 @@ function move(m){
       log('Power Strike cooling down!');
       enemy(); return;
     }
-    d = 35 + L*3 + up.atk*4;
+    d = 35 + L*3 + up.atk*4 + strBonus();
     crit = rollCrit();
     cool = powerCooldown() + 1;
   }
