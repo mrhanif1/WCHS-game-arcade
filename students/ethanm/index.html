@@ -373,6 +373,8 @@ let position=22;
 let startTime=0;
 let firstQuestionTime=0;
 
+const audio = new (window.AudioContext || window.webkitAudioContext)();
+
 const audio=new(window.AudioContext||window.webkitAudioContext)();
 
 let pitStopDone=false;
@@ -838,6 +840,8 @@ showQualifyingQuestion();
 
 };
 startBtn.onclick=function(){
+
+audio.resume();
 
 startScreen.style.display="none";
 
