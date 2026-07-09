@@ -650,7 +650,9 @@ function quizGate(){
     ans.appendChild(b);
   });
 }
-
+<form>
+ <input type="button" value="Go back!" onclick="history.back()">
+</form>
 // initial enemy name for the very first fight
 eName = ENEMY_NAMES[Math.floor(Math.random()*ENEMY_NAMES.length)];
 windCharges = up.wind;
