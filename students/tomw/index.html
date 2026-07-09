@@ -1,142 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Retro Tycoon</title>
-<style>
-body{
-margin:0;
-font-family:monospace;
-background:#3c8d2f;
-overflow:hidden;
-}
-#ui{
-position:absolute;
-top:10px;
-left:10px;
-background:#222;
-color:white;
-padding:10px;
-border:4px solid #000;
-}
-button{
-font-family:monospace;
-margin-top:5px;
-width:180px;
-height:35px;
-cursor:pointer;
-}
-#game{
-width:100vw;
-height:100vh;
-position:relative;
-}
-.dropper{
-width:40px;
-height:60px;
-background:#777;
-border:4px solid #444;
-position:absolute;
-top:150px;
-}
-.drop{
-width:12px;
-height:12px;
-background:gold;
-position:absolute;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retro Tycoon</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <section id="homeScreen" class="screen">
+    <div class="home-backdrop"></div>
+    <div class="home-card">
+      <h1>RETRO TYCOON</h1>
+      <p>Build a glowing money empire by buying droppers, upgrading speed, and sending coins down the conveyor to your vault.</p>
+      <button id="playBtn" class="play-btn">Play Game</button>
+    </div>
+  </section>
 
-<div id="ui">
-<h2>Retro Tycoon</h2>
-Money: $<span id="money">0</span><br>
-Dropper Level: <span id="level">1</span><br><br>
+  <section id="gameScreen" class="screen hidden">
+    <div class="game-shell">
+      <div class="top-panel">
+        <div>
+          <h2>Retro Tycoon</h2>
+          <div class="stats">
+            <div class="stat-pill">💰 Money: <span id="money">0</span></div>
+            <div class="stat-pill">🔧 Droppers: <span id="dropperCount">1</span></div>
+            <div class="stat-pill">⚙️ Speed: <span id="speed">1.0x</span></div>
+            <div class="stat-pill">💵 Value: <span id="dropValue">1</span></div>
+            <div class="stat-pill">🖱️ Clicker: <span id="clickerLevel">0</span></div>
+          </div>
+          <div id="incomePerSec" class="stat-pill">Income: 0/sec</div>
+        </div>
+        <div class="button-row">
+          <button id="buyBtn" class="action-btn" onclick="buyDropper()">Buy Dropper <span id="buyPrice" class="button-price">$100</span></button>
+          <button id="valueBtn" class="action-btn" onclick="upgradeDropValue()">Upgrade Value <span id="valuePrice" class="button-price">$50</span></button>
+          <button id="speedBtn" class="action-btn" onclick="upgradeSpeed()">Upgrade Speed <span id="speedPrice" class="button-price">$75</span></button>
+          <button id="clickerBuyBtn" class="action-btn" onclick="buyClicker()">Buy Clicker <span id="clickerBuyPrice" class="button-price">$150</span></button>
+          <button id="clickerUpgradeBtn" class="action-btn" onclick="upgradeClicker()">Upgrade Clicker <span id="clickerUpgradePrice" class="button-price">$100</span></button>
+          <button id="rebirthBtn" class="action-btn rebirth-btn" type="button" onclick="rebirth()">Rebirth <span id="rebirthPrice">$25000</span></button>
+          <button id="devBtn" class="action-btn" type="button">Developer Menu</button>
+        </div>
+      </div>
 
-<button onclick="upgrade()">Upgrade Dropper ($50)</button>
-<button onclick="buyDropper()">Buy Dropper ($100)</button>
-</div>
+      <div id="gameArea">
+        <div class="scene-bg"></div>
+        <div id="conveyor" class="conveyor"></div>
+        <button id="cogWheel" class="cog-wheel" type="button" aria-label="Binary challenge">⚙</button>
+        <div id="collectBox" class="collect-box">
+          <div class="vault-door">
+            <div class="vault-handle"></div>
+          </div>
+          <div class="vault-inner">
+            <small>Vault</small>
+            <div id="collectAmount">0</div>
+          </div>
+          <div class="vault-badge"></div>
+        </div>
 
-<div id="game"></div>
+        <div id="minigamePanel">
+          <div class="minigame-header">
+            <h3>Minion Arena</h3>
+            <p>Click the sword minion to earn money.</p>
+          </div>
+          <div id="minionZone" class="minion-zone">
+            <button id="minionButton" class="minion-button" type="button">
+              <span class="minion-sword"></span>
+              <span class="minion-label">MINION</span>
+            </button>
+          </div>
+          <div class="minion-upgrades">
+            <button id="minionUpgradeBtn" class="mini-action-btn" type="button" onclick="upgradeMinion()">Upgrade Minion <span id="minionUpgradePrice">$60</span></button>
+            <button id="bossUpgradeBtn" class="mini-action-btn" type="button" onclick="hireBossMinion()">Hire Boss Minion <span id="bossUpgradePrice">$220</span></button>
+            <button id="bossValueBtn" class="mini-action-btn" type="button" onclick="upgradeBossMinions()">Upgrade Bosses <span id="bossValuePrice">$300</span></button>
+          </div>
+        </div>
+      </div>
 
-<script>
-let money=0;
-let level=1;
-let price=50;
-let dropperPrice=100;
-let droppers=[100];
+      <div class="status-bar" id="statusText">Running • 1 dropper • 1.0x speed • $1/sec</div>
+    </div>
+  </section>
 
-const game=document.getElementById("game");
+  <div id="passwordOverlay" class="overlay hidden">
+    <div class="overlay-card">
+      <h2>Developer Access</h2>
+      <p>Enter the password to open the developer tools.</p>
+      <input id="passwordInput" class="password-input" type="password" maxlength="4" placeholder="1234" />
+      <div class="overlay-actions">
+        <button id="passwordSubmit" class="play-btn" type="button">Unlock</button>
+        <button id="passwordCancel" class="secondary-btn" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
 
-function drawDroppers(){
-game.innerHTML="";
-droppers.forEach(x=>{
-let d=document.createElement("div");
-d.className="dropper";
-d.style.left=x+"px";
-game.appendChild(d);
-});
-}
+  <div id="developerOverlay" class="overlay hidden">
+    <div class="overlay-card">
+      <h2>Developer Menu</h2>
+      <div class="dev-stats">
+        <div class="dev-stat">Money: <span id="devMoneyStat">0</span></div>
+        <div class="dev-stat">Droppers: <span id="devDroppersStat">0</span></div>
+        <div class="dev-stat">Speed: <span id="devSpeedStat">0</span></div>
+        <div class="dev-stat">Minions: <span id="devMinionStat">0</span></div>
+        <div class="dev-stat">Boss Minions: <span id="devBossStat">0</span></div>
+      </div>
+      <div class="overlay-actions">
+        <button id="addMoneyBtn" class="play-btn" type="button">Add $100</button>
+        <button id="removeMoneyBtn" class="secondary-btn" type="button">Remove $100</button>
+        <button id="addBlackMarketBtn" class="secondary-btn" type="button">Add Black Market Dropper</button>
+        <button id="closeDevBtn" class="secondary-btn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
 
-drawDroppers();
+  <div id="quizOverlay" class="overlay hidden">
+    <div class="overlay-card">
+      <h2>Binary Challenge</h2>
+      <p id="quizQuestion">Question</p>
+      <div id="quizOptions" class="quiz-options"></div>
+      <div class="overlay-actions">
+        <button id="quizSkip" class="secondary-btn" type="button">Skip</button>
+      </div>
+    </div>
+  </div>
 
-function update(){
-moneyDisplay.textContent=Math.floor(money);
-levelDisplay.textContent=level;
-}
-
-const moneyDisplay=document.getElementById("money");
-const levelDisplay=document.getElementById("level");
-
-function upgrade(){
-if(money>=price){
-money-=price;
-level++;
-price=Math.floor(price*1.6);
-document.querySelector("button").innerHTML=
-"Upgrade Dropper ($"+price+")";
-}
-}
-
-function buyDropper(){
-if(money>=dropperPrice){
-money-=dropperPrice;
-droppers.push(100+droppers.length*80);
-dropperPrice=Math.floor(dropperPrice*1.7);
-document.querySelectorAll("button")[1].innerHTML=
-"Buy Dropper ($"+dropperPrice+")";
-drawDroppers();
-}
-}
-
-setInterval(()=>{
-droppers.forEach(x=>{
-let drop=document.createElement("div");
-drop.className="drop";
-drop.style.left=(x+14)+"px";
-drop.style.top="210px";
-game.appendChild(drop);
-
-let y=210;
-
-let fall=setInterval(()=>{
-y+=5;
-drop.style.top=y+"px";
-
-if(y>320){
-money+=level;
-drop.remove();
-clearInterval(fall);
-update();
-}
-},20);
-
-});
-},1000);
-
-update();
-</script>
-
+  <script src="generated-content.js"></script>
+  <script src="game.js"></script>
+  <script src="home.js"></script>
 </body>
 </html>
