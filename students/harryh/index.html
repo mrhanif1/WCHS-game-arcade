@@ -1,55 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My GCSE Computing Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
-
-    .game-box {
-      max-width: 700px;
-      margin: auto;
-      background: #1f2937;
-      padding: 25px;
-      border-radius: 15px;
-    }
-
-    button {
-      display: block;
-      width: 90%;
-      max-width: 400px;
-      margin: 10px auto;
-      padding: 12px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-    }
-
-    a {
-      color: #93c5fd;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fortress Evolution</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
-  <div class="game-box">
-    <h1>My GCSE Computing Game</h1>
-    <p>This is my starter page. I will turn this into an interactive GCSE revision game.</p>
+  <div id="app">
+    <header>
+      <div>
+        <h1>Fortress Evolution</h1>
+        <div class="subtitle">A polished tower defence experience built for the arcade</div>
+      </div>
+      <div class="topbar">
+        <label class="map-picker">
+          <span>Map</span>
+          <select id="mapSelect">
+            <option value="desert">Desert</option>
+            <option value="forest">Forest</option>
+            <option value="snow">Snow</option>
+            <option value="space">Space</option>
+          </select>
+        </label>
+        <button id="startBtn">Start Game</button>
+        <button id="pauseBtn" class="secondary">Pause</button>
+        <button id="restartBtn" class="secondary">Restart</button>
+        <button id="helpBtn" class="secondary">How to Play</button>
+      </div>
+    </header>
 
-    <button onclick="alert('Game starting soon!')">Start Game</button>
+    <section class="info-strip" aria-label="Gameplay highlights">
+      <div class="info-chip">⚡ 15+ towers</div>
+      <div class="info-chip">🛡️ Bosses every 10 waves</div>
+      <div class="info-chip">💰 Economy and support synergy</div>
+      <div class="info-chip">🧠 Special enemy counters</div>
+    </section>
 
-    <p>
-      <a href="../../">Back to Arcade</a>
-    </p>
+    <section class="design-panel">
+      <h2>Design Brief</h2>
+      <div class="design-grid">
+        <div class="design-card">
+          <strong>1. Game Design Document</strong>
+          <p>Fortress Evolution is a futuristic tower defence game where players defend a core against escalating waves using strategic towers, research upgrades, and map control.</p>
+        </div>
+        <div class="design-card">
+          <strong>2. Code Structure</strong>
+          <p>The game is organised into distinct systems for towers, enemies, projectiles, waves, progression, and UI so new content can be added cleanly.</p>
+        </div>
+        <div class="design-card">
+          <strong>3. Gameplay Systems</strong>
+          <p>Players place towers on a grid, earn coins from kills, unlock upgrades, and survive wave-based invasions with boss encounters every 10 waves.</p>
+        </div>
+        <div class="design-card">
+          <strong>4. Balancing Plan</strong>
+          <p>Early waves teach the basics, mid-game mixes control and damage towers, and late-game requires support, economy, and specialised counters to stay competitive.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="main-area">
+      <div class="canvas-shell">
+        <canvas id="gameCanvas"></canvas>
+        <div id="overlay" class="overlay">
+          <div class="overlay-card">
+            <h2 id="overlayTitle">Fortress Evolution</h2>
+            <div id="overlayBody"></div>
+            <div id="overlayActions" class="actions"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="sidebar">
+        <section class="panel">
+          <h2>Fortress Status</h2>
+          <div class="stat-grid">
+            <div class="stat"><div class="label">Wave</div><div id="waveValue" class="value">1</div></div>
+            <div class="stat"><div class="label">Coins</div><div id="coinsValue" class="value">180</div></div>
+            <div class="stat"><div class="label">Health</div><div id="healthValue" class="value">100</div></div>
+            <div class="stat"><div class="label">XP</div><div id="xpValue" class="value">0/60</div></div>
+            <div class="stat"><div class="label">Level</div><div id="levelValue" class="value">1</div></div>
+            <div class="stat"><div class="label">Mode</div><div id="modeBadge" class="value">CAMPAIGN</div></div>
+            <div class="stat"><div class="label">Score</div><div id="scoreValue" class="value">0</div></div>
+            <div class="stat"><div class="label">Best</div><div id="bestValue" class="value">0</div></div>
+          </div>
+          <div class="challenge-box">
+            <strong>Daily Challenge</strong>
+            <div id="challengeText">Survive 10 waves for a bonus reward.</div>
+          </div>
+          <div class="leaderboard-box">
+            <strong>Fortress Leaderboard</strong>
+            <div id="leaderboardList" class="leaderboard-list"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h3>Tower Shop</h3>
+          <div id="shopList" class="shop-list"></div>
+        </section>
+
+        <section class="panel">
+          <h3>Selection</h3>
+          <div id="selectedTower">Select a tower</div>
+          <div id="upgradeBox" class="upgrade-box"></div>
+        </section>
+      </aside>
+    </div>
   </div>
+
+  <script src="game.js"></script>
 </body>
 </html>
