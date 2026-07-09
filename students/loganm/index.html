@@ -1,37 +1,452 @@
-<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Monster Battle</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mini Monster Battle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-body{font-family:Arial;background:#8fd3ff;text-align:center}#game{max-width:760px;margin:20px auto;background:#fff;padding:20px;border-radius:12px}.health,.xp{background:#999;height:18px;border-radius:9px;overflow:hidden}.fill{background:#2ecc71;height:100%}.xp .fill{background:#3498db}button{margin:5px;padding:10px}
-</style></head><body><div id='game'>
-<h1>Mini Monster Battle</h1>
-<p>Level <span id=lvl></span> | XP <span id=xp></span>/<span id=need></span></p>
-<div class='xp'><div id=xpfill class='fill'></div></div>
-<p>Your HP <span id=php></span>/<span id=mhp></span></p><div class='health'><div id=pfill class='fill'></div></div>
-<p>Enemy Lv <span id=elv></span> HP <span id=ehp></span>/<span id=emhp></span></p><div class='health'><div id=efill class='fill'></div></div>
-<div>
-<button onclick="move('scratch')">Scratch</button>
-<button onclick="move('fire')">Fire Blast</button>
-<button onclick="move('heal')">Heal Pulse</button>
-<button onclick="move('power')">Power Strike</button>
-</div><div id=log></div>
-<div id=quiz style='display:none'><h3>Answer to continue</h3><p id=q></p><div id=ans></div></div>
-</div><script>
+  :root{
+    --bg:#180f2b;
+    --card:#241a3d;
+    --card2:#2f2350;
+    --line:#3d2e63;
+    --gold:#d9a441;
+    --gold-dim:#8a6a2c;
+    --ember:#ff6b45;
+    --cream:#f3e7d0;
+    --dim:#b8a9d6;
+    --hp:#49b578;
+    --hp-low:#d9534f;
+    --xp:#5b8dee;
+    --enemy:#d9534f;
+    --danger:#e0524a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:'Inter',Arial,sans-serif;
+    background:
+      radial-gradient(circle at 20% 10%, #2a1c4a 0%, transparent 45%),
+      radial-gradient(circle at 85% 80%, #1f2f5a 0%, transparent 40%),
+      var(--bg);
+    color:var(--cream);
+    min-height:100vh;
+    padding:24px 12px;
+  }
+  #game{
+    max-width:760px;
+    margin:0 auto;
+    background:linear-gradient(180deg,var(--card),var(--card2));
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:24px 28px 30px;
+    box-shadow:0 20px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  h1{
+    font-family:'Cinzel',serif;
+    font-weight:900;
+    letter-spacing:.03em;
+    text-align:center;
+    margin:0 0 4px;
+    font-size:2rem;
+    color:var(--gold);
+    text-shadow:0 2px 12px rgba(217,164,65,.25);
+  }
+  .sub{
+    text-align:center;
+    color:var(--dim);
+    font-size:.85rem;
+    margin:0 0 20px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .statline{font-size:.95rem;color:var(--dim)}
+  .statline b{color:var(--cream)}
+  .gold-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(217,164,65,.12);
+    border:1px solid var(--gold-dim);
+    color:var(--gold);
+    padding:4px 12px;
+    border-radius:999px;
+    font-weight:600;
+    font-size:.9rem;
+  }
+  .bar{background:#140c26;height:16px;border-radius:8px;overflow:hidden;border:1px solid var(--line);margin:4px 0 14px}
+  .bar .fill{height:100%;transition:width .35s ease}
+  .fill.hp{background:linear-gradient(90deg,var(--hp),#7fe0a4)}
+  .fill.hp.low{background:linear-gradient(90deg,var(--hp-low),#f08a86)}
+  .fill.xp{background:linear-gradient(90deg,var(--xp),#8fb4f5)}
+  .fill.enemy{background:linear-gradient(90deg,var(--enemy),#f08a86)}
+  .panel-title{
+    font-family:'Cinzel',serif;
+    color:var(--gold);
+    font-size:1rem;
+    margin:18px 0 8px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:6px;
+  }
+  .moves{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    cursor:pointer;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#1c1433;
+    color:var(--cream);
+    padding:12px 10px;
+    font-size:.92rem;
+    transition:transform .12s ease, border-color .12s ease, background .12s ease;
+  }
+  button:hover:not(:disabled){border-color:var(--gold-dim);background:#241a44;transform:translateY(-1px)}
+  button:active:not(:disabled){transform:translateY(0)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .move-name{display:block;font-weight:700}
+  .move-desc{display:block;font-size:.72rem;color:var(--dim);margin-top:2px;font-weight:400}
+  #shopToggle{
+    width:100%;
+    background:linear-gradient(90deg,var(--ember),#c94a2a);
+    border:none;color:#1a0e08;font-family:'Cinzel',serif;font-weight:700;
+    letter-spacing:.04em;padding:12px;font-size:1rem;
+  }
+  #shopToggle:hover{filter:brightness(1.08)}
+  #shop{
+    display:none;
+    margin-top:16px;
+    background:#150d29;
+    border:1px solid var(--gold-dim);
+    border-radius:12px;
+    padding:16px;
+  }
+  .shop-item{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    padding:10px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .shop-item:last-child{border-bottom:none}
+  .shop-item .info{flex:1}
+  .shop-item .name{font-weight:700;color:var(--cream)}
+  .shop-item .desc{font-size:.78rem;color:var(--dim);margin-top:2px}
+  .shop-item .lvl{font-size:.72rem;color:var(--gold);margin-top:2px}
+  .buy-btn{
+    background:var(--gold);
+    color:#231604;
+    border:none;
+    min-width:92px;
+    font-weight:700;
+  }
+  .buy-btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+  #log{
+    margin-top:16px;
+    background:#120b22;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    min-height:52px;
+    font-size:.9rem;
+    color:var(--dim);
+    line-height:1.5;
+  }
+  #log b{color:var(--gold)}
+  #quiz{
+    display:none;
+    margin-top:16px;
+    background:#150d29;
+    border:1px solid var(--ember);
+    border-radius:12px;
+    padding:16px;
+    text-align:center;
+  }
+  #quiz h3{font-family:'Cinzel',serif;color:var(--ember);margin:0 0 8px}
+  #ans button{margin:4px}
+  .flash{animation:flash .4s ease}
+  @keyframes flash{0%{filter:brightness(1.6)}100%{filter:brightness(1)}}
+</style>
+</head>
+<body>
+<div id="game">
+  <h1>Mini Monster Battle</h1>
+  <p class="sub">A tiny turn-based skirmish</p>
+
+  <div class="row">
+    <span class="statline">Level <b id="lvl"></b> &nbsp;|&nbsp; XP <b id="xp"></b>/<b id="need"></b></span>
+    <span class="gold-badge">&#9830; <span id="gold"></span> gold</span>
+  </div>
+  <div class="bar"><div id="xpfill" class="fill xp"></div></div>
+
+  <p class="statline">Your HP <b id="php"></b>/<b id="mhp"></b></p>
+  <div class="bar"><div id="pfill" class="fill hp"></div></div>
+
+  <p class="statline">Enemy Lv <b id="elv"></b> &nbsp; HP <b id="ehp"></b>/<b id="emhp"></b></p>
+  <div class="bar"><div id="efill" class="fill enemy"></div></div>
+
+  <div class="moves">
+    <button onclick="move('scratch')">
+      <span class="move-name">Scratch</span>
+      <span class="move-desc" id="d-scratch"></span>
+    </button>
+    <button onclick="move('fire')">
+      <span class="move-name">Fire Blast</span>
+      <span class="move-desc" id="d-fire"></span>
+    </button>
+    <button onclick="move('heal')">
+      <span class="move-name">Heal Pulse</span>
+      <span class="move-desc" id="d-heal"></span>
+    </button>
+    <button onclick="move('power')" id="powerBtn">
+      <span class="move-name">Power Strike</span>
+      <span class="move-desc" id="d-power"></span>
+    </button>
+  </div>
+
+  <button id="shopToggle" onclick="toggleShop()">&#9878; Open the Merchant's Shop</button>
+
+  <div id="shop"></div>
+
+  <div id="log">Your adventure begins&hellip;</div>
+
+  <div id="quiz">
+    <h3>Answer to continue</h3>
+    <p id="q"></p>
+    <div id="ans"></div>
+  </div>
+</div>
+
+<script>
 const qs=[{q:'CPU stands for?',a:['Central Processing Unit','Computer Personal Unit'],c:0}];
-let s=JSON.parse(localStorage.getItem('mbsave')||'{}');
-let L=s.L||1,XP=s.XP||0,N=s.N||100,M=s.M||100,HP=M,cool=0;
-let eL=L,eM=80+eL*20,eHP=eM;
-function save(){localStorage.setItem('mbsave',JSON.stringify({L,XP,N,M}))}
-function ui(){lvl.textContent=L;xp.textContent=XP;need.textContent=N;mhp.textContent=M;php.textContent=HP;elv.textContent=eL;emhp.textContent=eM;ehp.textContent=eHP;pfill.style.width=HP/M*100+'%';efill.style.width=eHP/eM*100+'%';xpfill.style.width=XP/N*100+'%'}
-function gain(v){XP+=v;while(XP>=N){XP-=N;L++;N+=50;M+=20;HP=M;log.innerHTML+='<br><b>Level Up!</b>';}save();ui();}
-function newEnemy(){HP=M;eL=Math.max(1,L+Math.floor(Math.random()*3)-1);eM=80+eL*20;eHP=eM;cool=0;ui();}
-function enemy(){if(eHP<=0)return;let d=8+Math.floor(Math.random()*8)+eL*2;HP=Math.max(0,HP-d);log.innerHTML+='<br>Enemy hit '+d;if(HP<=0)quiz();ui();}
-function move(m){let d=0;
-if(m=='scratch')d=10+Math.floor(Math.random()*11)+L*2;
-if(m=='fire'){if(Math.random()<0.8)d=20+Math.floor(Math.random()*16)+L*2;else{log.innerHTML='Fire Blast missed!';enemy();return;}}
-if(m=='heal'){HP=Math.min(M,HP+25+L*2);log.innerHTML='Heal Pulse restored HP';ui();enemy();return;}
-if(m=='power'){if(cool>0){log.innerHTML='Power Strike cooling down!';enemy();return;}d=35+L*3;cool=2;}
-if(cool>0)cool--;
-eHP=Math.max(0,eHP-d);log.innerHTML='You dealt '+d;
-if(eHP<=0){gain(25+eL*10);log.innerHTML+='<br>Victory! Fully healed.';setTimeout(newEnemy,800);} else {ui();enemy();}}
-function quiz(){quiz.style.display='block';let x=qs[0];q.textContent=x.q;ans.innerHTML='';x.a.forEach((t,i)=>{let b=document.createElement('button');b.textContent=t;b.onclick=()=>{if(i==x.c){quiz.style.display='none';newEnemy();}else alert('Try again');};ans.appendChild(b);});}
+
+/* ---------- save / state ---------- */
+let s = JSON.parse(localStorage.getItem('mbsave') || '{}');
+let L = s.L || 1, XP = s.XP || 0, N = s.N || 100, M = s.M || 100;
+let gold = s.gold || 0;
+let up = Object.assign({atk:0, hp:0, heal:0, cool:0, crit:0}, s.up || {});
+let HP = (s.HP !== undefined ? s.HP : M);
+let cool = 0;
+
+let eL = L, eM = 80 + eL*20, eHP = eM;
+
+const SHOP_ITEMS = [
+  {
+    key:'atk', name:'Sharpen Claws', icon:'&#9876;',
+    desc:'Adds raw power to every attack move.',
+    baseCost:25, step:18, max:10,
+    apply:()=>{}
+  },
+  {
+    key:'hp', name:'Vitality Charm', icon:'&#10084;',
+    desc:'Permanently raises max HP by 15 and heals you fully.',
+    baseCost:30, step:22, max:10,
+    apply:()=>{ M += 15; HP = M; }
+  },
+  {
+    key:'heal', name:'Healing Amplifier', icon:'&#10024;',
+    desc:'Makes Heal Pulse restore much more HP.',
+    baseCost:22, step:16, max:10,
+    apply:()=>{}
+  },
+  {
+    key:'cool', name:'Quick Recovery', icon:'&#9201;',
+    desc:'Reduces Power Strike\'s cooldown by 1 turn.',
+    baseCost:60, step:70, max:2,
+    apply:()=>{}
+  },
+  {
+    key:'crit', name:'Critical Focus', icon:'&#127919;',
+    desc:'+5% chance for any attack to land a 1.5x critical hit.',
+    baseCost:35, step:28, max:5,
+    apply:()=>{}
+  }
+];
+
+function costOf(item){ return item.baseCost + up[item.key]*item.step; }
+function powerCooldown(){ return Math.max(0, 2 - up.cool); }
+function critChance(){ return up.crit * 0.05; }
+
+function save(){
+  localStorage.setItem('mbsave', JSON.stringify({L,XP,N,M,gold,up,HP}));
+}
+
+/* ---------- UI ---------- */
+function ui(){
+  lvl.textContent=L; xp.textContent=XP; need.textContent=N;
+  mhp.textContent=M; php.textContent=HP;
+  elv.textContent=eL; emhp.textContent=eM; ehp.textContent=eHP;
+  document.getElementById('gold').textContent = gold;
+
+  pfill.style.width = (HP/M*100)+'%';
+  pfill.classList.toggle('low', HP/M < 0.3);
+  efill.style.width = (eHP/eM*100)+'%';
+  xpfill.style.width = (XP/N*100)+'%';
+
+  document.getElementById('d-scratch').textContent = `~${10+L*2+up.atk*2}-${20+L*2+up.atk*2} dmg`;
+  document.getElementById('d-fire').textContent = `~${20+L*2+up.atk*3}-${35+L*2+up.atk*3} dmg (80%)`;
+  document.getElementById('d-heal').textContent = `+${25+L*2+up.heal*5} HP`;
+  document.getElementById('d-power').textContent = cool>0
+    ? `cooling down (${cool})`
+    : `${35+L*3+up.atk*4} dmg, ${powerCooldown()} turn CD`;
+  powerBtn.disabled = cool>0;
+
+  renderShop();
+  save();
+}
+
+function log(msg, append){
+  const el=document.getElementById('log');
+  el.innerHTML = append ? el.innerHTML+'<br>'+msg : msg;
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+
+/* ---------- shop ---------- */
+function toggleShop(){
+  const el=document.getElementById('shop');
+  const open = el.style.display==='block';
+  el.style.display = open ? 'none' : 'block';
+  document.getElementById('shopToggle').innerHTML = open
+    ? "&#9878; Open the Merchant's Shop"
+    : "&#9878; Close the Merchant's Shop";
+  if(!open) renderShop();
+}
+
+function renderShop(){
+  const el=document.getElementById('shop');
+  if(el.style.display!=='block') return;
+  el.innerHTML='<div class="panel-title">Merchant\'s Shop</div>';
+  SHOP_ITEMS.forEach(item=>{
+    const lvlCount = up[item.key];
+    const maxed = lvlCount >= item.max;
+    const cost = costOf(item);
+    const div=document.createElement('div');
+    div.className='shop-item';
+    div.innerHTML = `
+      <div class="info">
+        <div class="name">${item.icon} ${item.name}</div>
+        <div class="desc">${item.desc}</div>
+        <div class="lvl">Owned: ${lvlCount}/${item.max}</div>
+      </div>
+    `;
+    const btn=document.createElement('button');
+    btn.className='buy-btn';
+    btn.textContent = maxed ? 'Maxed' : `Buy (${cost}\u2666)`;
+    btn.disabled = maxed || gold < cost;
+    btn.onclick = ()=> buy(item);
+    div.appendChild(btn);
+    el.appendChild(div);
+  });
+}
+
+function buy(item){
+  const cost = costOf(item);
+  if(up[item.key] >= item.max || gold < cost) return;
+  gold -= cost;
+  up[item.key] += 1;
+  item.apply();
+  log(`Purchased <b>${item.name}</b>!`, true);
+  ui();
+}
+
+/* ---------- battle ---------- */
+function gain(v){
+  XP += v;
+  while(XP >= N){
+    XP -= N; L++; N += 50; M += 20; HP = M;
+    log('<b>Level Up!</b>', true);
+  }
+  ui();
+}
+
+function newEnemy(){
+  HP = M;
+  eL = Math.max(1, L + Math.floor(Math.random()*3) - 1);
+  eM = 80 + eL*20;
+  eHP = eM;
+  cool = 0;
+  ui();
+}
+
+function enemy(){
+  if(eHP <= 0) return;
+  let d = 8 + Math.floor(Math.random()*8) + eL*2;
+  HP = Math.max(0, HP - d);
+  log('Enemy hit '+d, true);
+  if(HP <= 0) quizGate();
+  ui();
+}
+
+function rollCrit(){ return Math.random() < critChance(); }
+
+function move(m){
+  let d = 0, crit = false;
+
+  if(m === 'scratch'){
+    d = 10 + Math.floor(Math.random()*11) + L*2 + up.atk*2;
+    crit = rollCrit();
+  }
+  if(m === 'fire'){
+    if(Math.random() < 0.8){
+      d = 20 + Math.floor(Math.random()*16) + L*2 + up.atk*3;
+      crit = rollCrit();
+    } else {
+      log('Fire Blast missed!');
+      enemy(); return;
+    }
+  }
+  if(m === 'heal'){
+    const h = 25 + L*2 + up.heal*5;
+    HP = Math.min(M, HP + h);
+    log('Heal Pulse restored '+h+' HP');
+    ui(); enemy(); return;
+  }
+  if(m === 'power'){
+    if(cool > 0){
+      log('Power Strike cooling down!');
+      enemy(); return;
+    }
+    d = 35 + L*3 + up.atk*4;
+    crit = rollCrit();
+    cool = powerCooldown() + 1;
+  }
+
+  if(cool > 0) cool--;
+  if(crit) d = Math.round(d*1.5);
+
+  eHP = Math.max(0, eHP - d);
+  log(crit ? `Critical hit! You dealt ${d}` : 'You dealt '+d);
+
+  if(eHP <= 0){
+    const goldWon = 15 + eL*8;
+    gold += goldWon;
+    gain(25 + eL*10);
+    log(`<b>Victory!</b> Found ${goldWon} gold. Fully healed.`, true);
+    setTimeout(newEnemy, 800);
+  } else {
+    ui();
+    enemy();
+  }
+}
+
+function quizGate(){
+  const box=document.getElementById('quiz');
+  box.style.display='block';
+  const x=qs[0];
+  document.getElementById('q').textContent=x.q;
+  const ans=document.getElementById('ans');
+  ans.innerHTML='';
+  x.a.forEach((t,i)=>{
+    const b=document.createElement('button');
+    b.textContent=t;
+    b.onclick=()=>{
+      if(i===x.c){ box.style.display='none'; newEnemy(); }
+      else alert('Try again');
+    };
+    ans.appendChild(b);
+  });
+}
+
 ui();
-</script></body></html>
+</script>
+</body>
+</html>
