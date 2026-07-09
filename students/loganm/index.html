@@ -21,7 +21,8 @@
     --hp-low:#d9534f;
     --xp:#5b8dee;
     --enemy:#d9534f;
-    --danger:#e0524a;
+    --boss:#c2185b;
+    --boss-glow:#ff2e63;
   }
   *{box-sizing:border-box}
   body{
@@ -43,6 +44,11 @@
     border-radius:16px;
     padding:24px 28px 30px;
     box-shadow:0 20px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03);
+    transition:box-shadow .4s ease, border-color .4s ease;
+  }
+  #game.boss-mode{
+    border-color:var(--boss);
+    box-shadow:0 20px 60px rgba(194,24,91,.35), inset 0 1px 0 rgba(255,255,255,.03);
   }
   h1{
     font-family:'Cinzel',serif;
@@ -81,6 +87,27 @@
   .fill.hp.low{background:linear-gradient(90deg,var(--hp-low),#f08a86)}
   .fill.xp{background:linear-gradient(90deg,var(--xp),#8fb4f5)}
   .fill.enemy{background:linear-gradient(90deg,var(--enemy),#f08a86)}
+  .fill.boss{background:linear-gradient(90deg,var(--boss),var(--boss-glow));}
+  .bar.boss-bar{border-color:var(--boss);box-shadow:0 0 14px rgba(255,46,99,.35);animation:pulseBar 1.6s ease-in-out infinite}
+  @keyframes pulseBar{0%,100%{box-shadow:0 0 8px rgba(255,46,99,.25)}50%{box-shadow:0 0 18px rgba(255,46,99,.55)}}
+
+  .enemy-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .boss-tag{
+    display:none;
+    align-items:center;gap:6px;
+    background:linear-gradient(90deg,var(--boss),#7a1030);
+    color:#ffe1ec;
+    font-family:'Cinzel',serif;
+    font-weight:700;
+    font-size:.72rem;
+    letter-spacing:.08em;
+    padding:3px 10px;
+    border-radius:999px;
+    text-transform:uppercase;
+  }
+  .boss-tag.show{display:inline-flex}
+  .next-boss{font-size:.72rem;color:var(--dim);opacity:.85}
+
   .panel-title{
     font-family:'Cinzel',serif;
     color:var(--gold);
@@ -152,6 +179,7 @@
     line-height:1.5;
   }
   #log b{color:var(--gold)}
+  #log b.boss-text{color:var(--boss-glow)}
   #quiz{
     display:none;
     margin-top:16px;
@@ -165,6 +193,25 @@
   #ans button{margin:4px}
   .flash{animation:flash .4s ease}
   @keyframes flash{0%{filter:brightness(1.6)}100%{filter:brightness(1)}}
+
+  #bossBanner{
+    display:none;
+    text-align:center;
+    font-family:'Cinzel',serif;
+    font-weight:900;
+    letter-spacing:.06em;
+    color:var(--boss-glow);
+    text-shadow:0 0 18px rgba(255,46,99,.5);
+    font-size:1.1rem;
+    margin:0 0 10px;
+    text-transform:uppercase;
+    animation:bannerIn .5s ease;
+  }
+  #bossBanner.show{display:block}
+  @keyframes bannerIn{
+    0%{opacity:0;transform:translateY(-6px) scale(.96)}
+    100%{opacity:1;transform:translateY(0) scale(1)}
+  }
 </style>
 </head>
 <body>
@@ -181,8 +228,16 @@
   <p class="statline">Your HP <b id="php"></b>/<b id="mhp"></b></p>
   <div class="bar"><div id="pfill" class="fill hp"></div></div>
 
-  <p class="statline">Enemy Lv <b id="elv"></b> &nbsp; HP <b id="ehp"></b>/<b id="emhp"></b></p>
-  <div class="bar"><div id="efill" class="fill enemy"></div></div>
+  <div id="bossBanner">&#9760; A Boss Approaches &#9760;</div>
+
+  <div class="enemy-head">
+    <p class="statline">
+      <span id="bossTag" class="boss-tag">&#128128; Boss</span>
+      <span id="enemyName"></span> &middot; Lv <b id="elv"></b> &nbsp; HP <b id="ehp"></b>/<b id="emhp"></b>
+    </p>
+    <span class="next-boss" id="nextBoss"></span>
+  </div>
+  <div class="bar" id="ebar"><div id="efill" class="fill enemy"></div></div>
 
   <div class="moves">
     <button onclick="move('scratch')">
@@ -219,15 +274,28 @@
 <script>
 const qs=[{q:'CPU stands for?',a:['Central Processing Unit','Computer Personal Unit'],c:0}];
 
+const BOSS_EVERY = 5; // a boss shows up after every 5 normal victories
+const BOSS_NAMES = [
+  'Grimwald the Ashen',
+  'Vex, Herald of Ruin',
+  'The Hollow Sovereign',
+  'Karrath Deepfang',
+  'Nyxara the Unbound',
+  'The Cindered Wyrm',
+  'Mordrec, Last Warden'
+];
+const ENEMY_NAMES = ['Snarling Whelp','Marsh Stalker','Cave Skitterling','Rot Hound','Ember Imp','Fen Wraith'];
+
 /* ---------- save / state ---------- */
 let s = JSON.parse(localStorage.getItem('mbsave') || '{}');
 let L = s.L || 1, XP = s.XP || 0, N = s.N || 100, M = s.M || 100;
 let gold = s.gold || 0;
 let up = Object.assign({atk:0, hp:0, heal:0, cool:0, crit:0}, s.up || {});
 let HP = (s.HP !== undefined ? s.HP : M);
+let defeats = s.defeats || 0;
 let cool = 0;
 
-let eL = L, eM = 80 + eL*20, eHP = eM;
+let eL = L, eM = 80 + eL*20, eHP = eM, eName = ENEMY_NAMES[0], isBoss = false;
 
 const SHOP_ITEMS = [
   {
@@ -267,7 +335,7 @@ function powerCooldown(){ return Math.max(0, 2 - up.cool); }
 function critChance(){ return up.crit * 0.05; }
 
 function save(){
-  localStorage.setItem('mbsave', JSON.stringify({L,XP,N,M,gold,up,HP}));
+  localStorage.setItem('mbsave', JSON.stringify({L,XP,N,M,gold,up,HP,defeats}));
 }
 
 /* ---------- UI ---------- */
@@ -276,11 +344,25 @@ function ui(){
   mhp.textContent=M; php.textContent=HP;
   elv.textContent=eL; emhp.textContent=eM; ehp.textContent=eHP;
   document.getElementById('gold').textContent = gold;
+  document.getElementById('enemyName').textContent = eName;
 
   pfill.style.width = (HP/M*100)+'%';
   pfill.classList.toggle('low', HP/M < 0.3);
   efill.style.width = (eHP/eM*100)+'%';
   xpfill.style.width = (XP/N*100)+'%';
+
+  // boss visuals
+  document.getElementById('game').classList.toggle('boss-mode', isBoss);
+  document.getElementById('bossBanner').classList.toggle('show', isBoss);
+  document.getElementById('bossTag').classList.toggle('show', isBoss);
+  document.getElementById('ebar').classList.toggle('boss-bar', isBoss);
+  efill.classList.toggle('boss', isBoss);
+  efill.classList.toggle('enemy', !isBoss);
+
+  const untilBoss = isBoss ? 0 : (BOSS_EVERY - (defeats % BOSS_EVERY));
+  document.getElementById('nextBoss').textContent = isBoss
+    ? ''
+    : `Next boss in ${untilBoss} win${untilBoss===1?'':'s'}`;
 
   document.getElementById('d-scratch').textContent = `~${10+L*2+up.atk*2}-${20+L*2+up.atk*2} dmg`;
   document.getElementById('d-fire').textContent = `~${20+L*2+up.atk*3}-${35+L*2+up.atk*3} dmg (80%)`;
@@ -360,18 +442,43 @@ function gain(v){
 
 function newEnemy(){
   HP = M;
-  eL = Math.max(1, L + Math.floor(Math.random()*3) - 1);
-  eM = 80 + eL*20;
-  eHP = eM;
   cool = 0;
+
+  const nextIsBoss = defeats > 0 && defeats % BOSS_EVERY === 0;
+  isBoss = nextIsBoss;
+
+  if(isBoss){
+    eL = L + 2;
+    eM = 150 + eL*40;
+    eName = BOSS_NAMES[Math.floor(defeats/BOSS_EVERY - 1) % BOSS_NAMES.length];
+    log(`<b class="boss-text">${eName} emerges from the shadows!</b>`);
+  } else {
+    eL = Math.max(1, L + Math.floor(Math.random()*3) - 1);
+    eM = 80 + eL*20;
+    eName = ENEMY_NAMES[Math.floor(Math.random()*ENEMY_NAMES.length)];
+  }
+  eHP = eM;
   ui();
 }
 
 function enemy(){
   if(eHP <= 0) return;
   let d = 8 + Math.floor(Math.random()*8) + eL*2;
+
+  if(isBoss){
+    d = Math.round(d*1.6);
+    if(Math.random() < 0.25){
+      const surge = Math.round(d*1.8);
+      HP = Math.max(0, HP - surge);
+      log(`<b class="boss-text">${eName} unleashes a devastating surge!</b> -${surge}`, true);
+      if(HP<=0) quizGate();
+      ui();
+      return;
+    }
+  }
+
   HP = Math.max(0, HP - d);
-  log('Enemy hit '+d, true);
+  log((isBoss ? `${eName} strikes` : 'Enemy hit')+' '+d, true);
   if(HP <= 0) quizGate();
   ui();
 }
@@ -417,11 +524,21 @@ function move(m){
   log(crit ? `Critical hit! You dealt ${d}` : 'You dealt '+d);
 
   if(eHP <= 0){
-    const goldWon = 15 + eL*8;
-    gold += goldWon;
-    gain(25 + eL*10);
-    log(`<b>Victory!</b> Found ${goldWon} gold. Fully healed.`, true);
-    setTimeout(newEnemy, 800);
+    if(isBoss){
+      const goldWon = 60 + eL*20;
+      gold += goldWon;
+      gain(60 + eL*15);
+      log(`<b class="boss-text">${eName} has fallen!</b> Found ${goldWon} gold. Fully healed.`, true);
+      defeats++;
+      setTimeout(newEnemy, 900);
+    } else {
+      const goldWon = 15 + eL*8;
+      gold += goldWon;
+      gain(25 + eL*10);
+      log(`<b>Victory!</b> Found ${goldWon} gold. Fully healed.`, true);
+      defeats++;
+      setTimeout(newEnemy, 800);
+    }
   } else {
     ui();
     enemy();
@@ -446,6 +563,8 @@ function quizGate(){
   });
 }
 
+// initial enemy name for the very first fight
+eName = ENEMY_NAMES[Math.floor(Math.random()*ENEMY_NAMES.length)];
 ui();
 </script>
 </body>
