@@ -116,6 +116,14 @@
     border-bottom:1px solid var(--line);
     padding-bottom:6px;
   }
+  .shop-cat{
+    font-size:.7rem;
+    color:var(--dim);
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    margin:14px 0 2px;
+  }
+  .shop-cat:first-of-type{margin-top:0}
   .moves{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
   button{
     font-family:'Inter',sans-serif;
@@ -148,6 +156,8 @@
     border:1px solid var(--gold-dim);
     border-radius:12px;
     padding:16px;
+    max-height:420px;
+    overflow-y:auto;
   }
   .shop-item{
     display:flex;justify-content:space-between;align-items:center;gap:12px;
@@ -180,6 +190,7 @@
   }
   #log b{color:var(--gold)}
   #log b.boss-text{color:var(--boss-glow)}
+  #log b.wind-text{color:var(--hp)}
   #quiz{
     display:none;
     margin-top:16px;
@@ -225,7 +236,7 @@
   </div>
   <div class="bar"><div id="xpfill" class="fill xp"></div></div>
 
-  <p class="statline">Your HP <b id="php"></b>/<b id="mhp"></b></p>
+  <p class="statline">Your HP <b id="php"></b>/<b id="mhp"></b> <span id="windTag" style="display:none;color:var(--hp);font-size:.78rem">&#9889; <span id="windCount"></span> Second Wind</span></p>
   <div class="bar"><div id="pfill" class="fill hp"></div></div>
 
   <div id="bossBanner">&#9760; A Boss Approaches &#9760;</div>
@@ -272,7 +283,18 @@
 </div>
 
 <script>
-const qs=[{q:'CPU stands for?',a:['Central Processing Unit','Computer Personal Unit'],c:0}];
+const QUIZ_POOL=[
+  {q:'CPU stands for?',a:['Central Processing Unit','Computer Personal Unit','Core Processor Utility','Central Program Unit'],c:0},
+  {q:'RAM is best described as?',a:['Long-term storage','Short-term working memory','A type of screen','A type of cable'],c:1},
+  {q:'HTML stands for?',a:['HyperText Markup Language','High Tech Modern Language','Home Tool Markup Language','HyperTransfer Machine Language'],c:0},
+  {q:'What does "www" stand for?',a:['World Wide Web','World Wide Wire','Web Wide World','Wide World Web'],c:0},
+  {q:'A byte is made up of how many bits?',a:['4','8','16','2'],c:1},
+  {q:'Which of these is an operating system?',a:['Photoshop','Linux','Excel','Chrome'],c:1},
+  {q:'What does "URL" stand for?',a:['Uniform Resource Locator','Universal Reference Link','User Response Load','Unified Recovery Line'],c:0},
+  {q:'Which company created the JavaScript language?',a:['Microsoft','Netscape','Apple','IBM'],c:1},
+  {q:'What does "GPU" primarily process?',a:['Sound','Graphics','Network packets','File storage'],c:1},
+  {q:'A firewall is used to?',a:['Cool down a computer','Filter network traffic','Speed up the CPU','Store backups'],c:1}
+];
 
 const BOSS_EVERY = 5; // a boss shows up after every 5 normal victories
 const BOSS_NAMES = [
@@ -290,42 +312,73 @@ const ENEMY_NAMES = ['Snarling Whelp','Marsh Stalker','Cave Skitterling','Rot Ho
 let s = JSON.parse(localStorage.getItem('mbsave') || '{}');
 let L = s.L || 1, XP = s.XP || 0, N = s.N || 100, M = s.M || 100;
 let gold = s.gold || 0;
-let up = Object.assign({atk:0, hp:0, heal:0, cool:0, crit:0}, s.up || {});
+let up = Object.assign({atk:0, hp:0, heal:0, cool:0, crit:0, armor:0, luck:0, wind:0, focus:0, swift:0}, s.up || {});
 let HP = (s.HP !== undefined ? s.HP : M);
 let defeats = s.defeats || 0;
 let cool = 0;
+let windCharges = 0;
 
 let eL = L, eM = 80 + eL*20, eHP = eM, eName = ENEMY_NAMES[0], isBoss = false;
 
 const SHOP_ITEMS = [
   {
-    key:'atk', name:'Sharpen Claws', icon:'&#9876;',
+    key:'atk', name:'Sharpen Claws', icon:'&#9876;', cat:'Offense',
     desc:'Adds raw power to every attack move.',
     baseCost:25, step:18, max:10,
     apply:()=>{}
   },
   {
-    key:'hp', name:'Vitality Charm', icon:'&#10084;',
+    key:'crit', name:'Critical Focus', icon:'&#127919;', cat:'Offense',
+    desc:'+5% chance for any attack to land a critical hit.',
+    baseCost:35, step:28, max:5,
+    apply:()=>{}
+  },
+  {
+    key:'focus', name:'Focused Mind', icon:'&#128301;', cat:'Offense',
+    desc:'Increases critical hit damage multiplier by 0.1x.',
+    baseCost:45, step:35, max:5,
+    apply:()=>{}
+  },
+  {
+    key:'swift', name:'Swift Strikes', icon:'&#128168;', cat:'Offense',
+    desc:'Reduces Fire Blast\'s miss chance by 5%.',
+    baseCost:40, step:30, max:4,
+    apply:()=>{}
+  },
+  {
+    key:'hp', name:'Vitality Charm', icon:'&#10084;', cat:'Defense',
     desc:'Permanently raises max HP by 15 and heals you fully.',
     baseCost:30, step:22, max:10,
     apply:()=>{ M += 15; HP = M; }
   },
   {
-    key:'heal', name:'Healing Amplifier', icon:'&#10024;',
+    key:'armor', name:'Iron Skin', icon:'&#128737;', cat:'Defense',
+    desc:'Reduces all incoming damage by 3%.',
+    baseCost:38, step:32, max:5,
+    apply:()=>{}
+  },
+  {
+    key:'wind', name:'Second Wind Talisman', icon:'&#9889;', cat:'Defense',
+    desc:'Survive a killing blow with 1 HP. Recharges every fight.',
+    baseCost:80, step:100, max:2,
+    apply:()=>{}
+  },
+  {
+    key:'heal', name:'Healing Amplifier', icon:'&#10024;', cat:'Support',
     desc:'Makes Heal Pulse restore much more HP.',
     baseCost:22, step:16, max:10,
     apply:()=>{}
   },
   {
-    key:'cool', name:'Quick Recovery', icon:'&#9201;',
+    key:'cool', name:'Quick Recovery', icon:'&#9201;', cat:'Support',
     desc:'Reduces Power Strike\'s cooldown by 1 turn.',
     baseCost:60, step:70, max:2,
     apply:()=>{}
   },
   {
-    key:'crit', name:'Critical Focus', icon:'&#127919;',
-    desc:'+5% chance for any attack to land a 1.5x critical hit.',
-    baseCost:35, step:28, max:5,
+    key:'luck', name:'Lucky Coin', icon:'&#127183;', cat:'Support',
+    desc:'Increases gold earned from victories by 10%.',
+    baseCost:35, step:25, max:5,
     apply:()=>{}
   }
 ];
@@ -333,6 +386,10 @@ const SHOP_ITEMS = [
 function costOf(item){ return item.baseCost + up[item.key]*item.step; }
 function powerCooldown(){ return Math.max(0, 2 - up.cool); }
 function critChance(){ return up.crit * 0.05; }
+function critMultiplier(){ return 1.5 + up.focus * 0.1; }
+function armorReduction(){ return Math.min(0.6, up.armor * 0.03); }
+function goldMultiplier(){ return 1 + up.luck * 0.1; }
+function fireMissChance(){ return Math.max(0, 0.2 - up.swift * 0.05); }
 
 function save(){
   localStorage.setItem('mbsave', JSON.stringify({L,XP,N,M,gold,up,HP,defeats}));
@@ -351,6 +408,9 @@ function ui(){
   efill.style.width = (eHP/eM*100)+'%';
   xpfill.style.width = (XP/N*100)+'%';
 
+  document.getElementById('windTag').style.display = up.wind>0 ? 'inline' : 'none';
+  document.getElementById('windCount').textContent = windCharges;
+
   // boss visuals
   document.getElementById('game').classList.toggle('boss-mode', isBoss);
   document.getElementById('bossBanner').classList.toggle('show', isBoss);
@@ -365,7 +425,7 @@ function ui(){
     : `Next boss in ${untilBoss} win${untilBoss===1?'':'s'}`;
 
   document.getElementById('d-scratch').textContent = `~${10+L*2+up.atk*2}-${20+L*2+up.atk*2} dmg`;
-  document.getElementById('d-fire').textContent = `~${20+L*2+up.atk*3}-${35+L*2+up.atk*3} dmg (80%)`;
+  document.getElementById('d-fire').textContent = `~${20+L*2+up.atk*3}-${35+L*2+up.atk*3} dmg (${Math.round((1-fireMissChance())*100)}%)`;
   document.getElementById('d-heal').textContent = `+${25+L*2+up.heal*5} HP`;
   document.getElementById('d-power').textContent = cool>0
     ? `cooling down (${cool})`
@@ -397,7 +457,15 @@ function renderShop(){
   const el=document.getElementById('shop');
   if(el.style.display!=='block') return;
   el.innerHTML='<div class="panel-title">Merchant\'s Shop</div>';
+  let lastCat = null;
   SHOP_ITEMS.forEach(item=>{
+    if(item.cat !== lastCat){
+      const catEl = document.createElement('div');
+      catEl.className = 'shop-cat';
+      catEl.textContent = item.cat;
+      el.appendChild(catEl);
+      lastCat = item.cat;
+    }
     const lvlCount = up[item.key];
     const maxed = lvlCount >= item.max;
     const cost = costOf(item);
@@ -443,6 +511,7 @@ function gain(v){
 function newEnemy(){
   HP = M;
   cool = 0;
+  windCharges = up.wind;
 
   const nextIsBoss = defeats > 0 && defeats % BOSS_EVERY === 0;
   isBoss = nextIsBoss;
@@ -461,6 +530,19 @@ function newEnemy(){
   ui();
 }
 
+function applyIncoming(rawDamage){
+  const reduced = Math.round(rawDamage * (1 - armorReduction()));
+  const wouldDie = (HP - reduced) <= 0;
+  if(wouldDie && windCharges > 0){
+    windCharges--;
+    HP = 1;
+    log(`<b class="wind-text">Your Second Wind Talisman flares, keeping you standing at 1 HP!</b>`, true);
+    return false; // did not actually die
+  }
+  HP = Math.max(0, HP - reduced);
+  return HP <= 0;
+}
+
 function enemy(){
   if(eHP <= 0) return;
   let d = 8 + Math.floor(Math.random()*8) + eL*2;
@@ -469,17 +551,17 @@ function enemy(){
     d = Math.round(d*1.6);
     if(Math.random() < 0.25){
       const surge = Math.round(d*1.8);
-      HP = Math.max(0, HP - surge);
+      const died = applyIncoming(surge);
       log(`<b class="boss-text">${eName} unleashes a devastating surge!</b> -${surge}`, true);
-      if(HP<=0) quizGate();
+      if(died) quizGate();
       ui();
       return;
     }
   }
 
-  HP = Math.max(0, HP - d);
+  const died = applyIncoming(d);
   log((isBoss ? `${eName} strikes` : 'Enemy hit')+' '+d, true);
-  if(HP <= 0) quizGate();
+  if(died) quizGate();
   ui();
 }
 
@@ -493,7 +575,7 @@ function move(m){
     crit = rollCrit();
   }
   if(m === 'fire'){
-    if(Math.random() < 0.8){
+    if(Math.random() >= fireMissChance()){
       d = 20 + Math.floor(Math.random()*16) + L*2 + up.atk*3;
       crit = rollCrit();
     } else {
@@ -518,21 +600,21 @@ function move(m){
   }
 
   if(cool > 0) cool--;
-  if(crit) d = Math.round(d*1.5);
+  if(crit) d = Math.round(d*critMultiplier());
 
   eHP = Math.max(0, eHP - d);
   log(crit ? `Critical hit! You dealt ${d}` : 'You dealt '+d);
 
   if(eHP <= 0){
     if(isBoss){
-      const goldWon = 60 + eL*20;
+      const goldWon = Math.round((60 + eL*20) * goldMultiplier());
       gold += goldWon;
       gain(60 + eL*15);
       log(`<b class="boss-text">${eName} has fallen!</b> Found ${goldWon} gold. Fully healed.`, true);
       defeats++;
       setTimeout(newEnemy, 900);
     } else {
-      const goldWon = 15 + eL*8;
+      const goldWon = Math.round((15 + eL*8) * goldMultiplier());
       gold += goldWon;
       gain(25 + eL*10);
       log(`<b>Victory!</b> Found ${goldWon} gold. Fully healed.`, true);
@@ -548,13 +630,19 @@ function move(m){
 function quizGate(){
   const box=document.getElementById('quiz');
   box.style.display='block';
-  const x=qs[0];
+  const x=QUIZ_POOL[Math.floor(Math.random()*QUIZ_POOL.length)];
   document.getElementById('q').textContent=x.q;
   const ans=document.getElementById('ans');
   ans.innerHTML='';
-  x.a.forEach((t,i)=>{
+  // shuffle answer order so the correct index isn't always in the same spot
+  const order = x.a.map((t,i)=>i);
+  for(let i=order.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [order[i],order[j]]=[order[j],order[i]];
+  }
+  order.forEach(i=>{
     const b=document.createElement('button');
-    b.textContent=t;
+    b.textContent=x.a[i];
     b.onclick=()=>{
       if(i===x.c){ box.style.display='none'; newEnemy(); }
       else alert('Try again');
@@ -565,6 +653,7 @@ function quizGate(){
 
 // initial enemy name for the very first fight
 eName = ENEMY_NAMES[Math.floor(Math.random()*ENEMY_NAMES.length)];
+windCharges = up.wind;
 ui();
 </script>
 </body>
