@@ -373,6 +373,8 @@ let position=22;
 let startTime=0;
 let firstQuestionTime=0;
 
+const audio=new(window.AudioContext||window.webkitAudioContext)();
+
 let pitStopDone=false;
 
 let pitCorrect=0;
@@ -413,10 +415,12 @@ if(currentAnswerCorrect){
 qualifyingCorrect++;
 
 feedback.textContent="✅ Correct";
+beep(900,0.15,"triangle");
 
 }else{
 
 feedback.textContent="❌ Incorrect";
+beep(250,0.3,"sawtooth");
 
 }
 
@@ -538,6 +542,7 @@ if(choice===q.answer){
 currentAnswerCorrect=true;
 
 feedback.textContent="✅ Correct! You overtook another driver!";
+beep(900,0.15,"triangle");
 
 position--;
 
@@ -550,6 +555,7 @@ position=1;
 currentAnswerCorrect=false;
 
 feedback.textContent="❌ Wrong! Another driver passed you.";
+beep(250,0.3,"sawtooth");
 
 position++;
 
@@ -602,7 +608,15 @@ showRaceQuestion();
 }
 
 function startPitStop(){
+for(let i=0;i<6;i++){
 
+setTimeout(function(){
+
+beep(200+i*50,0.05,"square");
+
+},i*90);
+
+}
 phase.textContent="Pit Stop";
 
 feedback.textContent="Answer the next 4 questions as quickly and accurately as possible!";
@@ -651,10 +665,12 @@ if(i===q.answer){
 
 pitCorrect++;
 feedback.textContent="✅ Correct";
+beep(900,0.15,"triangle");
 
 }else{
 
 feedback.textContent="❌ Incorrect";
+beep(250,0.3,"sawtooth");
 
 }
 
@@ -733,6 +749,20 @@ function finishRace(){
 
 phase.textContent="Race Finished";
 
+beep(700,0.15,"triangle");
+
+setTimeout(function(){
+
+beep(900,0.15,"triangle");
+
+},200);
+
+setTimeout(function(){
+
+beep(1200,0.4,"triangle");
+
+},400);
+
 question.textContent="🏁 The chequered flag is out!";
 
 answers.innerHTML="";
@@ -742,6 +772,19 @@ nextBtn.style.display="none";
 let message="";
 
 if(position===1){
+beep(800,0.2,"triangle");
+
+setTimeout(function(){
+
+beep(1000,0.2,"triangle");
+
+},250);
+
+setTimeout(function(){
+
+beep(1300,0.5,"triangle");
+
+},500);
 message="🏆 Great job! You won the race!";
 }
 else if(position===2 || position===3){
@@ -751,6 +794,13 @@ else if(position>=4 && position<=10){
 message="👍 Okay race! You scored some good points.";
 }
 else{
+beep(300,0.4,"sawtooth");
+
+setTimeout(function(){
+
+beep(220,0.5,"sawtooth");
+
+},400);
 message="😞 Bad race. Better luck next time.";
 }
 
@@ -793,9 +843,54 @@ startScreen.style.display="none";
 
 game.style.display="block";
 
+beep(500,0.2,"square");
+
+setTimeout(function(){
+beep(500,0.2,"square");
+},500);
+
+setTimeout(function(){
+beep(500,0.2,"square");
+},1000);
+
+setTimeout(function(){
+beep(500,0.2,"square");
+},1500);
+
+setTimeout(function(){
+
+beep(900,0.5,"square");
+
 showQualifyingQuestion();
 
+},2000);
+
 };
+
+function beep(freq,time,type){
+
+let osc=audio.createOscillator();
+
+let gain=audio.createGain();
+
+osc.type=type;
+
+osc.frequency.value=freq;
+
+osc.connect(gain);
+
+gain.connect(audio.destination);
+
+gain.gain.setValueAtTime(0.2,audio.currentTime);
+
+gain.gain.exponentialRampToValueAtTime(0.001,audio.currentTime+time);
+
+osc.start();
+
+osc.stop(audio.currentTime+time);
+
+}
+
 </script>
 
 </body>
