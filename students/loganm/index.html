@@ -25,6 +25,7 @@
     --boss-glow:#ff2e63;
     --stat:#7c5cff;
     --bonus:#2fbf9f;
+    --danger:#e0524a;
   }
   *{box-sizing:border-box}
   body{
@@ -39,6 +40,7 @@
     padding:24px 12px;
   }
   #game{
+    position:relative;
     max-width:760px;
     margin:0 auto;
     background:linear-gradient(180deg,var(--card),var(--card2));
@@ -52,6 +54,21 @@
     border-color:var(--boss);
     box-shadow:0 20px 60px rgba(194,24,91,.35), inset 0 1px 0 rgba(255,255,255,.03);
   }
+  #resetBtn{
+    position:absolute;
+    top:16px;
+    right:16px;
+    background:rgba(224,82,74,.12);
+    border:1px solid var(--danger);
+    color:#ffb3ae;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:.75rem;
+    padding:7px 12px;
+    border-radius:8px;
+    letter-spacing:.02em;
+  }
+  #resetBtn:hover{background:var(--danger);color:#fff}
   h1{
     font-family:'Cinzel',serif;
     font-weight:900;
@@ -144,13 +161,14 @@
   button:disabled{opacity:.4;cursor:not-allowed}
   .move-name{display:block;font-weight:700}
   .move-desc{display:block;font-size:.72rem;color:var(--dim);margin-top:2px;font-weight:400}
+  .move-lock{display:block;font-size:.68rem;color:var(--ember);margin-top:2px;font-weight:600}
   #shopToggle{
     width:100%;
     background:linear-gradient(90deg,var(--ember),#c94a2a);
     border:none;color:#1a0e08;font-family:'Cinzel',serif;font-weight:700;
     letter-spacing:.04em;padding:12px;font-size:1rem;
   }
-  #shopToggle:hover{filter:brightness(1.08)}
+  #shopToggle:hover:not(:disabled){filter:brightness(1.08)}
 
   #panelWrap{
     display:none;
@@ -244,6 +262,7 @@
   #log b.wind-text{color:var(--hp)}
   #log b.dodge-text{color:var(--stat)}
   #log b.bonus-text{color:var(--bonus)}
+  #log b.reset-text{color:var(--danger)}
   #quiz{
     display:none;
     margin-top:16px;
@@ -300,6 +319,8 @@
 </head>
 <body>
 <div id="game">
+  <button id="resetBtn" onclick="resetGame()">&#8635; Reset</button>
+
   <h1>Mini Monster Battle</h1>
   <p class="sub">A tiny turn-based skirmish</p>
 
@@ -324,15 +345,15 @@
   <div class="bar" id="ebar"><div id="efill" class="fill enemy"></div></div>
 
   <div class="moves">
-    <button onclick="move('scratch')">
+    <button onclick="move('scratch')" id="btnScratch">
       <span class="move-name">Scratch</span>
       <span class="move-desc" id="d-scratch"></span>
     </button>
-    <button onclick="move('fire')">
+    <button onclick="move('fire')" id="btnFire">
       <span class="move-name">Fire Blast</span>
       <span class="move-desc" id="d-fire"></span>
     </button>
-    <button onclick="move('heal')">
+    <button onclick="move('heal')" id="btnHeal">
       <span class="move-name">Heal Pulse</span>
       <span class="move-desc" id="d-heal"></span>
     </button>
@@ -412,6 +433,7 @@ let HP = (s.HP !== undefined ? s.HP : M);
 let defeats = s.defeats || 0;
 let cool = 0;
 let windCharges = 0;
+let quizActive = false; // true whenever a quiz/bonus-quiz box is on screen
 
 let eL = L, eM = 80 + eL*20, eHP = eM, eName = ENEMY_NAMES[0], isBoss = false;
 
@@ -441,6 +463,7 @@ function statCost(key){
 }
 
 function buyStat(key){
+  if(quizActive) return;
   const cost = statCost(key);
   if(gold < cost) return;
   gold -= cost;
@@ -569,7 +592,12 @@ function ui(){
   document.getElementById('d-power').textContent = cool>0
     ? `cooling down (${cool})`
     : `${35+L*3+up.atk*4+strBonus()} dmg, ${powerCooldown()} turn CD`;
-  powerBtn.disabled = cool>0;
+
+  // lock out all combat actions while a quiz is on screen
+  document.getElementById('btnScratch').disabled = quizActive;
+  document.getElementById('btnFire').disabled = quizActive;
+  document.getElementById('btnHeal').disabled = quizActive;
+  powerBtn.disabled = quizActive || cool>0;
 
   renderStats();
   renderShop();
@@ -623,7 +651,7 @@ function renderStats(){
     const btn=document.createElement('button');
     btn.className='stat-btn';
     btn.textContent = `Train (${cost}\u2666)`;
-    btn.disabled = gold < cost;
+    btn.disabled = gold < cost || quizActive;
     btn.onclick = ()=> buyStat(item.key);
     div.appendChild(btn);
     el.appendChild(div);
@@ -660,7 +688,7 @@ function renderShop(){
     const btn=document.createElement('button');
     btn.className='buy-btn';
     btn.textContent = maxed ? 'Maxed' : `Buy (${cost}\u2666)`;
-    btn.disabled = maxed || gold < cost;
+    btn.disabled = maxed || gold < cost || quizActive;
     btn.onclick = ()=> buy(item);
     div.appendChild(btn);
     el.appendChild(div);
@@ -668,12 +696,41 @@ function renderShop(){
 }
 
 function buy(item){
+  if(quizActive) return;
   const cost = costOf(item);
   if(up[item.key] >= item.max || gold < cost) return;
   gold -= cost;
   up[item.key] += 1;
   item.apply();
   log(`Purchased <b>${item.name}</b>!`, true);
+  ui();
+}
+
+/* ---------- reset ---------- */
+function resetGame(){
+  const ok = confirm('Reset your character? This wipes your level, gold, and every upgrade — there is no undo.');
+  if(!ok) return;
+
+  localStorage.removeItem('mbsave');
+
+  L = 1; XP = 0; N = 100; M = 100;
+  gold = 0;
+  up = {atk:0, hp:0, heal:0, cool:0, crit:0, armor:0, luck:0, wind:0, focus:0, swift:0};
+  stats = {str:0, vit:0, agi:0, wis:0};
+  HP = M;
+  defeats = 0;
+  cool = 0;
+  windCharges = 0;
+  quizActive = false;
+
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('bonusQuiz').style.display = 'none';
+
+  eName = ENEMY_NAMES[Math.floor(Math.random()*ENEMY_NAMES.length)];
+  isBoss = false;
+  eL = L; eM = 80 + eL*20; eHP = eM;
+
+  log('<b class="reset-text">Your character has been reset. A new adventure begins&hellip;</b>');
   ui();
 }
 
@@ -754,6 +811,8 @@ function enemy(){
 function rollCrit(){ return Math.random() < critChance(); }
 
 function move(m){
+  if(quizActive) return; // can't act while a quiz is on screen
+
   let d = 0, crit = false;
 
   if(m === 'scratch'){
@@ -823,6 +882,7 @@ function afterVictory(){
 
 /* ---------- lose-quiz (forces a retry, no reward) ---------- */
 function quizGate(){
+  quizActive = true;
   const box=document.getElementById('quiz');
   box.style.display='block';
   const x=QUIZ_POOL[Math.floor(Math.random()*QUIZ_POOL.length)];
@@ -838,15 +898,22 @@ function quizGate(){
     const b=document.createElement('button');
     b.textContent=x.a[i];
     b.onclick=()=>{
-      if(i===x.c){ box.style.display='none'; newEnemy(); }
-      else alert('Try again');
+      if(i===x.c){
+        box.style.display='none';
+        quizActive = false;
+        newEnemy();
+      } else {
+        alert('Try again');
+      }
     };
     ans.appendChild(b);
   });
+  ui();
 }
 
 /* ---------- bonus wave-trial quiz (every BONUS_EVERY wins, free upgrade on correct) ---------- */
 function bonusQuizGate(){
+  quizActive = true;
   const box=document.getElementById('bonusQuiz');
   box.style.display='block';
   const x=QUIZ_POOL[Math.floor(Math.random()*QUIZ_POOL.length)];
@@ -868,10 +935,15 @@ function bonusQuizGate(){
       } else {
         log('You missed the Wave Trial question — no upgrade this time.', true);
       }
-      setTimeout(()=>{ box.style.display='none'; newEnemy(); }, 900);
+      setTimeout(()=>{
+        box.style.display='none';
+        quizActive = false;
+        newEnemy();
+      }, 900);
     };
     ans.appendChild(b);
   });
+  ui();
 }
 
 function awardFreeUpgrade(){
