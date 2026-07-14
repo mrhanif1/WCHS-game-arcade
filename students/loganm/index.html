@@ -24,6 +24,7 @@
     --boss:#c2185b;
     --boss-glow:#ff2e63;
     --stat:#7c5cff;
+    --bonus:#2fbf9f;
   }
   *{box-sizing:border-box}
   body{
@@ -242,6 +243,7 @@
   #log b.boss-text{color:var(--boss-glow)}
   #log b.wind-text{color:var(--hp)}
   #log b.dodge-text{color:var(--stat)}
+  #log b.bonus-text{color:var(--bonus)}
   #quiz{
     display:none;
     margin-top:16px;
@@ -253,6 +255,26 @@
   }
   #quiz h3{font-family:'Cinzel',serif;color:var(--ember);margin:0 0 8px}
   #ans button{margin:4px}
+
+  #bonusQuiz{
+    display:none;
+    margin-top:16px;
+    background:#0f2a26;
+    border:1px solid var(--bonus);
+    border-radius:12px;
+    padding:16px;
+    text-align:center;
+    box-shadow:0 0 18px rgba(47,191,159,.25);
+  }
+  #bonusQuiz h3{
+    font-family:'Cinzel',serif;
+    color:var(--bonus);
+    margin:0 0 4px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  #bonusQuiz .bq-sub{font-size:.78rem;color:var(--dim);margin:0 0 10px}
+  #bqAns button{margin:4px}
   .flash{animation:flash .4s ease}
   @keyframes flash{0%{filter:brightness(1.6)}100%{filter:brightness(1)}}
 
@@ -339,6 +361,13 @@
 
   <div id="log">Your adventure begins&hellip;</div>
 
+  <div id="bonusQuiz">
+    <h3>&#127775; Wave Trial</h3>
+    <p class="bq-sub">Answer correctly for a free upgrade!</p>
+    <p id="bq"></p>
+    <div id="bqAns"></div>
+  </div>
+
   <div id="quiz">
     <h3>Answer to continue</h3>
     <p id="q"></p>
@@ -360,7 +389,8 @@ const QUIZ_POOL=[
   {q:'A firewall is used to?',a:['Cool down a computer','Filter network traffic','Speed up the CPU','Store backups'],c:1}
 ];
 
-const BOSS_EVERY = 5; // a boss shows up after every 5 normal victories
+const BOSS_EVERY = 10;   // a boss shows up after every 10 wave-clears
+const BONUS_EVERY = 5;   // every 5 wave-clears, answer a question for a free upgrade
 const BOSS_NAMES = [
   'Grimwald the Ashen',
   'Vex, Herald of Ruin',
@@ -418,6 +448,11 @@ function buyStat(key){
   if(key === 'vit'){ M += 10; HP = M; }
   log(`Trained <b>${STAT_ITEMS.find(x=>x.key===key).name}</b>!`, true);
   ui();
+}
+
+function grantFreeStat(key){
+  stats[key] += 1;
+  if(key === 'vit'){ M += 10; HP = M; }
 }
 
 /* ---------- shop items (gear) ---------- */
@@ -762,22 +797,31 @@ function move(m){
       gold += goldWon;
       gain(60 + eL*15);
       log(`<b class="boss-text">${eName} has fallen!</b> Found ${goldWon} gold. Fully healed.`, true);
-      defeats++;
-      setTimeout(newEnemy, 900);
     } else {
       const goldWon = Math.round((15 + eL*8) * goldMultiplier());
       gold += goldWon;
       gain(25 + eL*10);
       log(`<b>Victory!</b> Found ${goldWon} gold. Fully healed.`, true);
-      defeats++;
-      setTimeout(newEnemy, 800);
     }
+    defeats++;
+    afterVictory();
   } else {
     ui();
     enemy();
   }
 }
 
+/* ---------- what happens right after a win ---------- */
+function afterVictory(){
+  ui();
+  if(defeats % BONUS_EVERY === 0){
+    setTimeout(bonusQuizGate, 700);
+  } else {
+    setTimeout(newEnemy, 800);
+  }
+}
+
+/* ---------- lose-quiz (forces a retry, no reward) ---------- */
 function quizGate(){
   const box=document.getElementById('quiz');
   box.style.display='block';
@@ -785,7 +829,6 @@ function quizGate(){
   document.getElementById('q').textContent=x.q;
   const ans=document.getElementById('ans');
   ans.innerHTML='';
-  // shuffle answer order so the correct index isn't always in the same spot
   const order = x.a.map((t,i)=>i);
   for(let i=order.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
@@ -800,6 +843,52 @@ function quizGate(){
     };
     ans.appendChild(b);
   });
+}
+
+/* ---------- bonus wave-trial quiz (every BONUS_EVERY wins, free upgrade on correct) ---------- */
+function bonusQuizGate(){
+  const box=document.getElementById('bonusQuiz');
+  box.style.display='block';
+  const x=QUIZ_POOL[Math.floor(Math.random()*QUIZ_POOL.length)];
+  document.getElementById('bq').textContent=x.q;
+  const ans=document.getElementById('bqAns');
+  ans.innerHTML='';
+  const order = x.a.map((t,i)=>i);
+  for(let i=order.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [order[i],order[j]]=[order[j],order[i]];
+  }
+  order.forEach(i=>{
+    const b=document.createElement('button');
+    b.textContent=x.a[i];
+    b.onclick=()=>{
+      ans.querySelectorAll('button').forEach(btn=>btn.disabled=true);
+      if(i===x.c){
+        awardFreeUpgrade();
+      } else {
+        log('You missed the Wave Trial question — no upgrade this time.', true);
+      }
+      setTimeout(()=>{ box.style.display='none'; newEnemy(); }, 900);
+    };
+    ans.appendChild(b);
+  });
+}
+
+function awardFreeUpgrade(){
+  // prefer a random non-maxed shop item; fall back to a random stat
+  const candidates = SHOP_ITEMS.filter(i => up[i.key] < i.max);
+  if(candidates.length > 0){
+    const item = candidates[Math.floor(Math.random()*candidates.length)];
+    up[item.key] += 1;
+    item.apply();
+    log(`<b class="bonus-text">Wave Trial passed!</b> Free upgrade: ${item.icon} ${item.name}`, true);
+  } else {
+    const key = Object.keys(stats)[Math.floor(Math.random()*Object.keys(stats).length)];
+    grantFreeStat(key);
+    const name = STAT_ITEMS.find(x=>x.key===key).name;
+    log(`<b class="bonus-text">Wave Trial passed!</b> Free stat point: ${name}`, true);
+  }
+  ui();
 }
 
 // initial enemy name for the very first fight
