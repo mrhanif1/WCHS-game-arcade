@@ -3,37 +3,66 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="refresh" content="0; url=./students/odhranm/index.html" />
     <title>Gladiator Logic Arena</title>
     <style>
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         font-family: Arial, sans-serif;
         background: #140d08;
         color: #f6ebd8;
-        display: grid;
-        place-items: center;
-        min-height: 100vh;
       }
-      .box {
+      .shell {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 16px;
+        gap: 12px;
+      }
+      .banner {
+        text-align: center;
         background: #31170c;
         border: 2px solid #f8c84b;
         border-radius: 18px;
-        padding: 24px 28px;
-        text-align: center;
+        padding: 16px 20px;
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
       }
-      a {
-        color: #f8c84b;
-        font-weight: bold;
+      .banner h1 {
+        margin: 0 0 6px;
+        font-size: 2rem;
+      }
+      .banner p {
+        margin: 0;
+        color: #fce7b2;
+      }
+      iframe {
+        flex: 1;
+        width: 100%;
+        min-height: 78vh;
+        border: 0;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+      }
+      @media (max-width: 700px) {
+        .banner h1 {
+          font-size: 1.4rem;
+        }
+        iframe {
+          min-height: 70vh;
+        }
       }
     </style>
   </head>
   <body>
-    <div class="box">
-      <h1>Gladiator Logic Arena</h1>
-      <p>Redirecting to the game...</p>
-      <p><a href="./students/odhranm/index.html">Open the game now</a></p>
+    <div class="shell">
+      <div class="banner">
+        <h1>Gladiator Logic Arena</h1>
+        <p>The game opens right here on the home page.</p>
+      </div>
+      <iframe src="./students/odhranm/index.html" title="Gladiator Logic Arena"></iframe>
     </div>
   </body>
 </html>
