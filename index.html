@@ -1,68 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gladiator Logic Arena</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #140d08;
-        color: #f6ebd8;
-      }
-      .shell {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        padding: 16px;
-        gap: 12px;
-      }
-      .banner {
-        text-align: center;
-        background: #31170c;
-        border: 2px solid #f8c84b;
-        border-radius: 18px;
-        padding: 16px 20px;
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-      }
-      .banner h1 {
-        margin: 0 0 6px;
-        font-size: 2rem;
-      }
-      .banner p {
-        margin: 0;
-        color: #fce7b2;
-      }
-      iframe {
-        flex: 1;
-        width: 100%;
-        min-height: 78vh;
-        border: 0;
-        border-radius: 18px;
-        background: #fff;
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-      }
-      @media (max-width: 700px) {
-        .banner h1 {
-          font-size: 1.4rem;
-        }
-        iframe {
-          min-height: 70vh;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="shell">
-      <div class="banner">
-        <h1>Gladiator Logic Arena</h1>
-        <p>The game opens right here on the home page.</p>
-      </div>
-      <iframe src="./students/odhranm/index.html" title="Gladiator Logic Arena"></iframe>
-    </div>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WCHS GCSE Computing Arcade v2</title>
+  <base href="/WCHS-game-arcade/">
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;background:#f8fbff;color:#111827;padding:24px}header{text-align:center;max-width:900px;margin:0 auto 28px}h1{font-size:42px;color:#2563eb;margin:10px 0}.subtitle{font-size:22px;font-weight:bold;color:#4b5563}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;max-width:1100px;margin:0 auto}.card{background:white;border:3px solid #bfdbfe;border-radius:22px;padding:20px;box-shadow:0 12px 30px rgba(37,99,235,.12)}.card h2{font-size:26px;margin:0 0 8px}.card p{font-size:18px;line-height:1.35;color:#374151}.play{display:inline-block;background:#2563eb;color:white;text-decoration:none;padding:13px 18px;border-radius:14px;font-size:20px;font-weight:bold}.demo{border-color:#a78bfa;background:#faf5ff}.note{text-align:center;font-size:18px;color:#4b5563;margin-top:30px}@media(max-width:600px){h1{font-size:32px}.subtitle{font-size:18px}.card h2{font-size:24px}.card p{font-size:17px}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎮 WCHS GCSE Computing Arcade v3</h1>
+    <p class="subtitle">Student-made GCSE revision games. Pick a card and play.</p>
+  </header>
+
+  <main class="grid">
+    <section class="card demo"><h2>🔐 Mr Hanif</h2><p>Cyber Escape Room<br>Topic: 1.1 System Architecture</p><a class="play" href="students/bhanif/">Play demo</a></section>
+    <section class="card"><h2>Alfie</h2><p>Student game<br>Status: in development</p><a class="play" href="students/alfieh/">Play game</a></section>
+    <section class="card"><h2>Ethan</h2><p>Student game<br>Status: in development</p><a class="play" href="students/ethanm/">Play game</a></section>
+    <section class="card"><h2>Harry</h2><p>Student game<br>Status: in development</p><a class="play" href="students/harryh/">Play game</a></section>
+    <section class="card"><h2>Jenson</h2><p>Student game<br>Status: in development</p><a class="play" href="students/jensonh/">Play game</a></section>
+    <section class="card"><h2>Logan</h2><p>Student game<br>Status: in development</p><a class="play" href="students/loganm/">Play game</a></section>
+    <section class="card"><h2>Odhran</h2><p>Student game<br>Status: in development</p><a class="play" href="students/odhranm/">Play game</a></section>
+    <section class="card"><h2>Ted</h2><p>Student game<br>Status: in development</p><a class="play" href="students/tedp/">Play game</a></section>
+    <section class="card"><h2>Tom</h2><p>Student game<br>Status: in development</p><a class="play" href="students/tomw/">Play game</a></section>
+  </main>
+
+  <p class="note">Use the live GitHub Pages link to play games. Use GitHub only when editing code.</p>
+</body>
 </html>
