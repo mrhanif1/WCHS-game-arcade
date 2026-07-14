@@ -39,29 +39,35 @@
     </section>
 
     <section class="design-panel">
-      <h2>Design Brief</h2>
+      <div class="design-panel-header">
+        <div>
+          <h2>Mission Control</h2>
+          <p>Defend the core, learn CS theory, and turn every round into a stronger build.</p>
+        </div>
+        <div class="info-chip">⚙️ Click-to-place towers</div>
+      </div>
       <div class="design-grid">
         <div class="design-card">
-          <strong>1. Game Design Document</strong>
-          <p>Fortress Evolution is a futuristic tower defence game where players defend a core against escalating waves using strategic towers, research upgrades, and map control.</p>
+          <strong>1. Place towers</strong>
+          <p>Select a tower and click the battle grid to deploy it.</p>
         </div>
         <div class="design-card">
-          <strong>2. Code Structure</strong>
-          <p>The game is organised into distinct systems for towers, enemies, projectiles, waves, progression, and UI so new content can be added cleanly.</p>
+          <strong>2. Survive rounds</strong>
+          <p>Every completed wave gives you coins, XP, and a short challenge prompt.</p>
         </div>
         <div class="design-card">
-          <strong>3. Gameplay Systems</strong>
-          <p>Players place towers on a grid, earn coins from kills, unlock upgrades, and survive wave-based invasions with boss encounters every 10 waves.</p>
-        </div>
-        <div class="design-card">
-          <strong>4. Balancing Plan</strong>
-          <p>Early waves teach the basics, mid-game mixes control and damage towers, and late-game requires support, economy, and specialised counters to stay competitive.</p>
+          <strong>3. Study while you play</strong>
+          <p>Answer revision questions to boost your economy and unlock better defenses.</p>
         </div>
       </div>
     </section>
 
     <div class="main-area">
       <div class="canvas-shell">
+        <div id="placementHint" class="placement-hint">
+          <strong>Select a tower</strong>
+          <span>Choose a tower from the shop, then click the battlefield to place it.</span>
+        </div>
         <canvas id="gameCanvas"></canvas>
         <div id="overlay" class="overlay">
           <div class="overlay-card">

@@ -1,4 +1,6 @@
 const canvas = document.getElementById('gameCanvas');
+const canvasShell = document.querySelector('.canvas-shell');
+const placementHint = document.getElementById('placementHint');
 const ctx = canvas.getContext('2d');
 const world = { width: 1400, height: 680 };
 
@@ -571,7 +573,11 @@ function hideOverlay() { ui.overlay.classList.add('hidden'); }
 function placeTower(x, y, type) {
   const snapped = snapToGrid(x, y);
   const def = towerDefs.find(t => t.id === type);
-  if (!def || state.coins < def.cost) return false;
+  if (!def) return false;
+  if (state.coins < def.cost) {
+    pushEvent(`Need ${def.cost} coins to place ${def.name}.`, 'info');
+    return false;
+  }
   if (!canPlaceTower(snapped.x, snapped.y)) {
     state.placementBlockedReason = isOnPath(snapped.x, snapped.y) ? 'That spot is on the escape route.' : 'That grid is occupied or out of bounds.';
     pushEvent(state.placementBlockedReason, 'info');
@@ -631,6 +637,17 @@ function spawnBurst(x, y, color, amount = 12, speed = 2.4) {
     state.effects.push({ x, y, vx: Math.cos(angle) * (Math.random() * speed + 0.8), vy: Math.sin(angle) * (Math.random() * speed + 0.8), life: 18 + Math.random() * 8, size: 2 + Math.random() * 3, color, glow: Math.random() > 0.6 });
   }
 }
+function triggerRoundQuestion() {
+  const topic = state.learning.focusTopic || questionService.topics[0].name;
+  const question = questionService.generateQuestion(topic);
+  state.learning.currentQuestion = question;
+  state.learning.selectedOption = null;
+  state.learning.challengeActive = true;
+  state.learning.answeredCount += 1;
+  ui.feedbackBox.textContent = 'Round complete! Answer this bonus question to earn a stronger reward.';
+  ui.feedbackBox.className = 'feedback-box good';
+  renderLearningUi();
+}
 function update(dt) {
   if (!state.gameStarted || state.paused) return;
   if (state.comboTimer > 0) state.comboTimer -= 1; else if (state.combo > 0) state.combo = 0;
@@ -650,7 +667,11 @@ function update(dt) {
   if (state.spawning && state.waveIntroTimer <= 0) { state.spawnTimer += 1; if (state.spawnTimer >= state.spawnDelay) { state.spawnTimer = 0; if (state.spawnIndex < state.currentWaveEnemies.length) { createEnemy(state.currentWaveEnemies[state.spawnIndex]); state.spawnIndex += 1; } } }
   if (state.spawning && state.spawnIndex >= state.currentWaveEnemies.length && state.enemies.length === 0) { state.spawning = false; state.wave += 1; state.coins += 40 + state.wave * 4; state.xp += 18 + state.wave * 2; addScore(45 + state.wave * 10); state.stats.wavesCompleted += 1; if (state.challenge.progress >= state.challenge.target) { state.coins += state.challenge.reward; state.challenge.progress = 0; unlockAchievement('Daily Challenge Complete'); pushEvent('Daily challenge cleared. Bonus coins received.', 'success'); }
     if (state.wave > state.maxWave) { addScore(180 + state.wave * 16); state.coins += 120 + state.level * 10; submitScore(); playSound('victory'); showOverlay('Victory', 'The fortress survived the campaign and the arc is secure.', [{ label: 'Restart', action: resetGame }]); state.gameStarted = false; }
-    else { playSound('wave'); showOverlay('Wave Complete', `Wave ${state.wave - 1} cleared. Bosses emerge every 10 waves.`, [{ label: 'Continue', action: hideOverlay }]); }
+    else {
+      playSound('wave');
+      showOverlay('Wave Complete', `Wave ${state.wave - 1} cleared. Bosses emerge every 10 waves.`, [{ label: 'Continue', action: hideOverlay }]);
+      triggerRoundQuestion();
+    }
   }
   for (const tower of state.towers) { tower.timer += 1; if (tower.timer >= tower.cooldown) { tower.timer = 0; fireTower(tower); } }
   for (const enemy of state.enemies) { if (!enemy.alive) continue; if (enemy.freezeTimer > 0) { enemy.freezeTimer -= 1; if (enemy.freezeTimer === 0) enemy.speed *= 0.85; }
@@ -798,8 +819,24 @@ function drawHud() {
   }
   if (state.waveBannerTimer > 0) { ctx.fillStyle = '#fde68a'; ctx.font = 'bold 16px Inter, sans-serif'; ctx.fillText(state.waveBanner, 28, 146); }
 }
+function refreshPlacementHint() {
+  if (!placementHint) return;
+  if (!state.gameStarted) {
+    placementHint.innerHTML = '<strong>Start the run</strong><span>Press Start Game, then pick a tower and click the battlefield.</span>';
+    placementHint.classList.remove('active');
+    return;
+  }
+  if (state.selectedTowerType) {
+    placementHint.innerHTML = `<strong>${getTowerName(state.selectedTowerType)} ready</strong><span>Click the battlefield to place it.</span>`;
+    placementHint.classList.add('active');
+  } else {
+    placementHint.innerHTML = '<strong>Pick a tower</strong><span>Choose a tower from the shop and click the battlefield to place it.</span>';
+    placementHint.classList.remove('active');
+  }
+}
 function updateUi() {
   ui.wave.textContent = state.wave; ui.coins.textContent = state.coins; ui.health.textContent = state.health; ui.xp.textContent = `${state.xp}/${state.level * 60}`; ui.level.textContent = state.level; ui.score.textContent = state.score; ui.best.textContent = state.bestScore; ui.modeBadge.textContent = state.mode.toUpperCase(); ui.challengeText.textContent = `${state.challenge.title} · ${state.challenge.progress}/${state.challenge.target}`; ui.battleStatus.textContent = state.pendingTowerHint ? state.pendingTowerHint : (state.surgeActive ? 'Surge active — pressure is rising.' : state.combo > 1 ? `Combo x${state.combo} active` : 'Momentum is building.');
+  refreshPlacementHint();
   if (state.selectedTower) {
     ui.selected.textContent = `${getTowerName(state.selectedTower.type)} • Lv${state.selectedTower.level}`;
   } else if (state.selectedTowerType) {
@@ -809,7 +846,7 @@ function updateUi() {
     ui.selected.textContent = 'Select a tower';
   }
   renderShop(); renderUpgrades(); renderLeaderboard(); renderEventFeed(); renderLearningUi(); }
-function renderShop() { ui.shop.innerHTML = ''; towerDefs.filter(tower => state.unlockedTowers.includes(tower.id)).forEach(tower => { const card = document.createElement('div'); card.className = 'shop-card'; if (state.selectedTowerType === tower.id) card.classList.add('active'); card.innerHTML = `<div class="name">${tower.name}</div><div class="meta">${tower.description}</div><div class="meta">Cost ${tower.cost} • Dmg ${tower.damage}</div>`; const btn = document.createElement('button'); btn.textContent = state.selectedTowerType === tower.id ? 'Selected' : 'Drop'; btn.onclick = () => { state.selectedTowerType = tower.id; state.selectedTower = null; state.pendingTowerHint = `${tower.name} ready`; updateUi(); }; card.appendChild(btn); ui.shop.appendChild(card); }); }
+function renderShop() { ui.shop.innerHTML = ''; towerDefs.filter(tower => state.unlockedTowers.includes(tower.id)).forEach(tower => { const card = document.createElement('div'); card.className = 'shop-card'; if (state.selectedTowerType === tower.id) card.classList.add('active'); card.innerHTML = `<div class="name">${tower.name}</div><div class="meta">${tower.description}</div><div class="meta">Cost ${tower.cost} • Dmg ${tower.damage}</div>`; const btn = document.createElement('button'); btn.textContent = state.selectedTowerType === tower.id ? 'Selected' : 'Place'; btn.onclick = () => { state.selectedTowerType = tower.id; state.selectedTower = null; state.pendingTowerHint = `${tower.name} ready. Click the battlefield to place it.`; updateUi(); }; card.appendChild(btn); ui.shop.appendChild(card); }); }
 function saveProgress() {
   try {
     const payload = {
@@ -1042,14 +1079,17 @@ function renderLeaderboard() {
 }
 function handleCellClick(event) {
   if (event.type === 'pointerdown' && event.pointerType === 'mouse' && event.button !== 0) return;
+  if (event.type === 'click' && event.button !== 0) return;
   event.preventDefault();
   const point = screenToWorld(event.clientX, event.clientY);
   const snapped = snapToGrid(point.x, point.y);
   state.previewPoint = snapped;
   if (state.selectedTowerType) {
-    if (placeTower(snapped.x, snapped.y, state.selectedTowerType)) {
+    const placed = placeTower(snapped.x, snapped.y, state.selectedTowerType);
+    if (placed) {
       state.selectedTowerType = null;
-      state.pendingTowerHint = '';
+      state.pendingTowerHint = 'Tower placed. Pick another or continue defending.';
+      state.selectedTower = null;
       updateUi();
     } else {
       updateUi();
@@ -1063,7 +1103,8 @@ function handleCellClick(event) {
     }
   }
 }
-canvas.addEventListener('pointerdown', handleCellClick);
+canvasShell.addEventListener('pointerdown', handleCellClick);
+canvasShell.addEventListener('click', handleCellClick);
 canvas.addEventListener('contextmenu', event => event.preventDefault());
 canvas.addEventListener('pointermove', event => {
   const point = screenToWorld(event.clientX, event.clientY);
