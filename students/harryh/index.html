@@ -27,6 +27,7 @@
         <button id="pauseBtn" class="secondary">Pause</button>
         <button id="restartBtn" class="secondary">Restart</button>
         <button id="helpBtn" class="secondary">How to Play</button>
+        <button id="themeToggle" class="secondary">🌙 Theme</button>
       </div>
     </header>
 
@@ -87,6 +88,11 @@
           <div class="challenge-box">
             <strong>Daily Challenge</strong>
             <div id="challengeText">Survive 10 waves for a bonus reward.</div>
+            <div id="battleStatus" class="battle-status">Momentum is building.</div>
+          </div>
+          <div class="leaderboard-box">
+            <strong>Battle Feed</strong>
+            <div id="eventFeed" class="event-feed"></div>
           </div>
           <div class="leaderboard-box">
             <strong>Fortress Leaderboard</strong>
@@ -106,8 +112,73 @@
         </section>
       </aside>
     </div>
+
+    <section class="learning-platform" aria-label="Computer Science revision hub">
+      <div class="learning-header">
+        <div>
+          <h2>CS Revision Hub</h2>
+          <p>Practice theory, earn coins and XP, and turn every correct answer into stronger tower defenses.</p>
+        </div>
+        <div class="learning-badges">
+          <span class="info-chip">🏅 Adaptive quizzes</span>
+          <span class="info-chip">⚙️ Topic tracking</span>
+          <span class="info-chip">💎 Daily rewards</span>
+        </div>
+      </div>
+      <div class="learning-grid">
+        <section class="panel learning-panel">
+          <div class="panel-header">
+            <h3>Topic Focus</h3>
+            <div id="questionCount" class="soft-label">0 questions answered</div>
+          </div>
+          <div id="topicList" class="topic-list"></div>
+        </section>
+
+        <section class="panel learning-panel quiz-panel">
+          <div id="quizHeader" class="quiz-header"></div>
+          <div id="questionPrompt" class="prompt"></div>
+          <div id="answerOptions" class="answer-options"></div>
+          <div id="feedbackBox" class="feedback-box"></div>
+          <div class="quiz-controls">
+            <button id="checkAnswerBtn" class="action-btn">Check answer</button>
+            <button id="skipQuestionBtn" class="secondary">Skip</button>
+          </div>
+        </section>
+
+        <section class="panel learning-panel">
+          <h3>Progress & Settings</h3>
+          <div id="profileStats" class="profile-stats"></div>
+          <div class="profile-section">
+            <strong>Weak topics</strong>
+            <div id="weakTopics" class="weak-topics"></div>
+          </div>
+          <div class="profile-section">
+            <strong>Preferences</strong>
+            <label class="toggle-row"><input type="checkbox" id="soundToggle" checked /> Sound effects</label>
+            <label class="toggle-row"><input type="checkbox" id="animationToggle" checked /> Animations</label>
+            <label class="toggle-row"><input type="checkbox" id="colorblindToggle" /> Colourblind friendly</label>
+          </div>
+          <div class="profile-section">
+            <strong>Missions & Rewards</strong>
+            <div id="missionList" class="weak-topics"></div>
+            <button id="dailyRewardBtn" class="action-btn secondary">Claim daily reward</button>
+            <div id="saveStatus" class="soft-label">Autosave ready</div>
+          </div>
+          <div class="profile-section">
+            <strong>Study Tools</strong>
+            <div class="quiz-controls">
+              <button id="mockExamBtn" class="action-btn">Start mock exam</button>
+              <button id="studyPlanBtn" class="secondary">Study plan</button>
+            </div>
+            <div id="studyPlanBox" class="weak-topics"></div>
+          </div>
+        </section>
+      </div>
+    </section>
   </div>
 
+  <script src="learning-content.js"></script>
+  <script src="expanded-content.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
