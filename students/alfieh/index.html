@@ -694,7 +694,8 @@
           ctx.fillStyle = "#ffffff";
           ctx.fillText(this.game.sound.muted ? "Muted" : "Unmuted", 380, 380);
           ctx.fillText(this.game.speedrunMode ? "Speedrun Mode: ON" : "Speedrun Mode: OFF", 380, 440);
-          ctx.fillText("Click near the bar to set volume", 380, 500);
+          ctx.fillText(this.game.questionsEnabled ? "Questions: ON" : "Questions: OFF", 380, 480);
+          ctx.fillText("Click near the bar to set volume", 380, 530);
           ctx.restore();
         }
 
@@ -765,6 +766,11 @@
             const ratio = (x - sliderX) / sliderW;
             this.game.sound.setVolume(clamp(ratio, 0, 1));
           }
+          // Toggle questions on click
+          if (x > 380 && x < 800 && y > 465 && y < 495) {
+            this.game.questionsEnabled = !this.game.questionsEnabled;
+            this.game.saveProgress();
+          }
         }
 
         if (this.game.touchControlsEnabled) {
@@ -817,6 +823,7 @@
         this.activeQuestion = null;
         this.unlockedBat = false;
         this.speedrunMode = false;
+        this.questionsEnabled = true;
         this.touchControlsEnabled = window.matchMedia("(pointer: coarse)").matches;
         this.lastTime = 0;
         this.saveKey = "tung-obby-save";
@@ -922,6 +929,7 @@
           this.deaths = data.deaths || 0;
           this.unlockedBat = !!data.unlockedBat;
           this.speedrunMode = !!data.speedrunMode;
+          this.questionsEnabled = data.questionsEnabled !== false;
         } catch (err) {
           console.warn("Save data is invalid.");
         }
@@ -933,7 +941,8 @@
           coinsCollected: this.coinsCollected,
           deaths: this.deaths,
           unlockedBat: this.unlockedBat,
-          speedrunMode: this.speedrunMode
+          speedrunMode: this.speedrunMode,
+          questionsEnabled: this.questionsEnabled
         };
         localStorage.setItem(this.saveKey, JSON.stringify(data));
       }
@@ -969,10 +978,16 @@
 
       completeLevel() {
         if (this.currentLevel < this.levels.length - 1) {
-          // Ask a question before moving to the next level
-          this.activeQuestion = { ...this.questionManager.getNextQuestion(), isPostLevel: true };
-          this.questionActive = true;
-          this.state = "question";
+          // Ask a question before moving to the next level (if enabled)
+          if (this.questionsEnabled) {
+            this.activeQuestion = { ...this.questionManager.getNextQuestion(), isPostLevel: true };
+            this.questionActive = true;
+            this.state = "question";
+          } else {
+            this.currentLevel += 1;
+            this.loadLevel(this.currentLevel);
+            this.saveProgress();
+          }
         } else {
           this.unlockedBat = true;
           this.state = "won";
