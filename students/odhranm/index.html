@@ -1,55 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>My GCSE Computing Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#140d08" />
+    <title>Gladiator Logic Arena</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="particles" aria-hidden="true"></div>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
+    <div class="app-shell">
+      <header class="top-bar">
+        <div>
+          <p class="eyebrow">GCSE Boolean Logic Training</p>
+          <h1>Gladiator Logic Arena</h1>
+        </div>
+        <div class="title-glow"></div>
+      </header>
 
-    .game-box {
-      max-width: 700px;
-      margin: auto;
-      background: #1f2937;
-      padding: 25px;
-      border-radius: 15px;
-    }
+      <section class="hud" aria-label="Game status">
+        <div class="hud-block">
+          <span class="hud-label">Lives</span>
+          <div id="lives" class="hearts"></div>
+        </div>
+        <div class="hud-block">
+          <span class="hud-label">Glory Points</span>
+          <strong id="glory-score">0</strong>
+        </div>
+        <div class="hud-block">
+          <span class="hud-label">Battle Power</span>
+          <strong id="battle-power">0</strong>
+        </div>
+        <div class="hud-block">
+          <span class="hud-label">Equipment</span>
+          <div id="equipment-list" class="equipment-list"></div>
+        </div>
+        <div class="hud-block wide">
+          <span class="hud-label">Training Progress</span>
+          <div class="progress-track">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
+          <small id="progress-text">0/8</small>
+        </div>
+        <div class="hud-block">
+          <span class="hud-label">Question</span>
+          <strong id="question-number">0/8</strong>
+        </div>
+      </section>
 
-    button {
-      display: block;
-      width: 90%;
-      max-width: 400px;
-      margin: 10px auto;
-      padding: 12px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-    }
+      <main class="game-area">
+        <section id="menu-screen" class="screen active">
+          <div class="panel">
+            <h2>Welcome, Gladiator</h2>
+            <p class="screen-text">
+              Train through eight GCSE Boolean Logic trials, earn equipment, and challenge the Arena Champion.
+            </p>
+            <div class="button-row">
+              <button id="play-btn" class="primary-btn">Play</button>
+              <button id="help-btn" class="secondary-btn">How To Play</button>
+            </div>
+            <div class="button-row">
+              <button id="score-btn" class="secondary-btn">High Score</button>
+              <button id="settings-btn" class="secondary-btn">Music: On</button>
+            </div>
+            <div id="menu-info" class="info-box">
+              <h3>High Score</h3>
+              <p id="menu-high-score">0</p>
+            </div>
+            <div id="help-panel" class="help-panel hidden">
+              <h3>How To Play</h3>
+              <ul>
+                <li>Answer each question carefully.</li>
+                <li>Correct answers add glory and unlock gear.</li>
+                <li>Wrong answers cost a life.</li>
+                <li>Use your battle power to defeat the champion.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
 
-    a {
-      color: #93c5fd;
-    }
-  </style>
-</head>
+        <section id="story-screen" class="screen">
+          <div class="panel story-panel">
+            <h2>The Arena Awakens</h2>
+            <p class="screen-text">
+              You step into the dusty coliseum as the crowd roars. Eight trials stand between you and glory.
+              Each challenge sharpens your logic and strengthens your weapons.
+            </p>
+            <button id="start-trials-btn" class="primary-btn">Begin Training</button>
+          </div>
+        </section>
 
-<body>
-  <div class="game-box">
-    <h1>My GCSE Computing Game</h1>
-    <p>This is my starter page. I will turn this into an interactive GCSE revision game.</p>
+        <section id="question-screen" class="screen">
+          <div class="panel question-panel">
+            <div class="question-header">
+              <h2 id="question-title">Question</h2>
+              <p id="question-topic" class="topic">Boolean Values</p>
+            </div>
+            <p id="question-text" class="question-text"></p>
+            <div id="options" class="options"></div>
+          </div>
+        </section>
 
-    <button onclick="alert('Game starting soon!')">Start Game</button>
+        <section id="feedback-screen" class="screen overlay-screen">
+          <div class="panel feedback-panel" id="feedback-panel">
+            <h2 id="feedback-title">Correct!</h2>
+            <p id="feedback-message"></p>
+            <p id="feedback-detail"></p>
+            <button id="continue-btn" class="primary-btn">Continue</button>
+          </div>
+        </section>
 
-    <p>
-      <a href="../../">Back to Arcade</a>
-    </p>
-  </div>
-</body>
+        <section id="battle-screen" class="screen">
+          <div class="panel battle-panel">
+            <h2>The Final Battle</h2>
+            <p id="battle-status" class="screen-text">The arena gates open...</p>
+            <div class="battle-stage">
+              <div class="fighter-card">
+                <div class="fighter player" id="player-fighter"></div>
+                <p class="fighter-name">You</p>
+              </div>
+              <div class="battle-centre">
+                <div class="arena-glow"></div>
+                <div id="battle-effect" class="battle-effect"></div>
+              </div>
+              <div class="fighter-card">
+                <div class="fighter champion" id="champion-fighter"></div>
+                <p class="fighter-name">Arena Champion</p>
+              </div>
+            </div>
+            <div class="battle-meter">
+              <span>Battle Power</span>
+              <strong id="battle-meter-value">0</strong>
+            </div>
+            <button id="battle-btn" class="primary-btn">Fight!</button>
+          </div>
+        </section>
+
+        <section id="end-screen" class="screen">
+          <div class="panel end-panel">
+            <h2 id="result-title">Victory</h2>
+            <p id="result-text" class="screen-text"></p>
+            <div class="summary-grid">
+              <div class="summary-card">
+                <h3>Final Score</h3>
+                <p id="final-score">0</p>
+              </div>
+              <div class="summary-card">
+                <h3>Correct Answers</h3>
+                <p id="final-correct">0</p>
+              </div>
+              <div class="summary-card">
+                <h3>Rank</h3>
+                <p id="final-rank">Recruit</p>
+              </div>
+            </div>
+            <div class="equipment-summary">
+              <h3>Equipment</h3>
+              <div id="final-equipment" class="equipment-list"></div>
+            </div>
+            <div class="button-row">
+              <button id="play-again-btn" class="primary-btn">Play Again</button>
+              <button id="menu-return-btn" class="secondary-btn">Main Menu</button>
+            </div>
+            <p class="high-score-note">High Score: <span id="final-high-score">0</span></p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
 </html>

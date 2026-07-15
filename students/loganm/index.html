@@ -24,6 +24,14 @@
     --boss:#c2185b;
     --boss-glow:#ff2e63;
     --stat:#7c5cff;
+    --bonus:#2fbf9f;
+    --danger:#e0524a;
+    --r-common:#b8a9d6;
+    --r-uncommon:#49b578;
+    --r-rare:#5b8dee;
+    --r-epic:#a855f7;
+    --r-legendary:#d9a441;
+    --trial:#ffb84d;
   }
   *{box-sizing:border-box}
   body{
@@ -38,6 +46,7 @@
     padding:24px 12px;
   }
   #game{
+    position:relative;
     max-width:760px;
     margin:0 auto;
     background:linear-gradient(180deg,var(--card),var(--card2));
@@ -51,6 +60,21 @@
     border-color:var(--boss);
     box-shadow:0 20px 60px rgba(194,24,91,.35), inset 0 1px 0 rgba(255,255,255,.03);
   }
+  #resetBtn{
+    position:absolute;
+    top:16px;
+    right:16px;
+    background:rgba(224,82,74,.12);
+    border:1px solid var(--danger);
+    color:#ffb3ae;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:.75rem;
+    padding:7px 12px;
+    border-radius:8px;
+    letter-spacing:.02em;
+  }
+  #resetBtn:hover{background:var(--danger);color:#fff}
   h1{
     font-family:'Cinzel',serif;
     font-weight:900;
@@ -72,11 +96,22 @@
   .row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
   .statline{font-size:.95rem;color:var(--dim)}
   .statline b{color:var(--cream)}
+  .badge-group{display:flex;gap:8px;flex-wrap:wrap}
   .gold-badge{
     display:inline-flex;align-items:center;gap:6px;
     background:rgba(217,164,65,.12);
     border:1px solid var(--gold-dim);
     color:var(--gold);
+    padding:4px 12px;
+    border-radius:999px;
+    font-weight:600;
+    font-size:.9rem;
+  }
+  .trial-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,184,77,.12);
+    border:1px solid var(--trial);
+    color:var(--trial);
     padding:4px 12px;
     border-radius:999px;
     font-weight:600;
@@ -149,7 +184,7 @@
     border:none;color:#1a0e08;font-family:'Cinzel',serif;font-weight:700;
     letter-spacing:.04em;padding:12px;font-size:1rem;
   }
-  #shopToggle:hover{filter:brightness(1.08)}
+  #shopToggle:hover:not(:disabled){filter:brightness(1.08)}
 
   #panelWrap{
     display:none;
@@ -163,8 +198,8 @@
     padding:10px;
     font-family:'Cinzel',serif;
     font-weight:700;
-    font-size:.85rem;
-    letter-spacing:.03em;
+    font-size:.8rem;
+    letter-spacing:.02em;
     color:var(--dim);
   }
   .tab-btn.active{
@@ -227,6 +262,61 @@
     font-weight:700;
   }
   .buy-btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+
+  #gear{
+    background:#150d29;
+    border:1px solid var(--r-rare);
+    border-radius:12px;
+    padding:16px;
+    max-height:500px;
+    overflow-y:auto;
+  }
+  .slot-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+  .slot-box{
+    background:#1c1433;
+    border:1px dashed var(--line);
+    border-radius:10px;
+    padding:10px;
+    text-align:center;
+  }
+  .slot-box.filled{border-style:solid}
+  .slot-label{font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+  .slot-item-name{font-weight:700;font-size:.82rem;margin-bottom:6px;min-height:2.2em;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px}
+  .slot-item-lvl{font-size:.68rem;color:var(--stat);font-weight:600}
+  .unequip-btn{
+    width:100%;
+    background:#2a1c46;
+    border:1px solid var(--danger);
+    color:#ffb3ae;
+    font-size:.72rem;
+    padding:6px;
+  }
+  .unequip-btn:hover:not(:disabled){background:var(--danger);color:#fff}
+  .inv-empty{color:var(--dim);font-size:.85rem;text-align:center;padding:20px 0}
+  .inv-item{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:10px 8px;
+    border-bottom:1px solid var(--line);
+    border-left:3px solid var(--r-common);
+    margin-bottom:2px;
+    background:rgba(255,255,255,.02);
+    border-radius:0 8px 8px 0;
+  }
+  .inv-item:last-child{border-bottom:none}
+  .inv-item .info{flex:1}
+  .inv-item .name{font-weight:700;font-size:.88rem}
+  .inv-item .rarity-tag{font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-left:6px}
+  .inv-item .lvl-tag{font-size:.68rem;color:var(--stat);font-weight:700;margin-left:6px}
+  .inv-item .desc{font-size:.75rem;color:var(--dim);margin-top:2px}
+  .inv-item .slot-tag{font-size:.68rem;color:var(--dim);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+  .inv-actions{display:flex;flex-direction:column;gap:6px;min-width:96px}
+  .equip-btn{background:var(--bonus);color:#062018;border:none;font-weight:700;font-size:.78rem;padding:8px 10px}
+  .equip-btn:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+  .equip-btn.equipped{background:var(--dim);color:#1a0e08}
+  .levelup-btn{background:var(--stat);color:#fff;border:none;font-weight:700;font-size:.72rem;padding:7px 10px}
+  .levelup-btn:hover:not(:disabled){filter:brightness(1.15);transform:translateY(-1px)}
+  .levelup-btn.maxed{background:var(--gold);color:#231604}
+
   #log{
     margin-top:16px;
     background:#120b22;
@@ -242,6 +332,14 @@
   #log b.boss-text{color:var(--boss-glow)}
   #log b.wind-text{color:var(--hp)}
   #log b.dodge-text{color:var(--stat)}
+  #log b.bonus-text{color:var(--bonus)}
+  #log b.reset-text{color:var(--danger)}
+  #log b.trial-text{color:var(--trial)}
+  #log b.drop-common{color:var(--r-common)}
+  #log b.drop-uncommon{color:var(--r-uncommon)}
+  #log b.drop-rare{color:var(--r-rare)}
+  #log b.drop-epic{color:var(--r-epic)}
+  #log b.drop-legendary{color:var(--r-legendary)}
   #quiz{
     display:none;
     margin-top:16px;
@@ -252,9 +350,67 @@
     text-align:center;
   }
   #quiz h3{font-family:'Cinzel',serif;color:var(--ember);margin:0 0 8px}
+  #quiz .quiz-sub{font-size:.78rem;color:var(--dim);margin:0 0 10px}
   #ans button{margin:4px}
+
+  #bonusQuiz{
+    display:none;
+    margin-top:16px;
+    background:#0f2a26;
+    border:1px solid var(--bonus);
+    border-radius:12px;
+    padding:16px;
+    text-align:center;
+    box-shadow:0 0 18px rgba(47,191,159,.25);
+  }
+  #bonusQuiz h3{
+    font-family:'Cinzel',serif;
+    color:var(--bonus);
+    margin:0 0 4px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  #bonusQuiz .bq-sub{font-size:.78rem;color:var(--dim);margin:0 0 10px}
+  #bqAns button{margin:4px}
   .flash{animation:flash .4s ease}
   @keyframes flash{0%{filter:brightness(1.6)}100%{filter:brightness(1)}}
+
+  #choicePopup{
+    display:none;
+    margin-top:16px;
+    background:#2a1c0f;
+    border:1px solid var(--trial);
+    border-radius:12px;
+    padding:18px;
+    text-align:center;
+    box-shadow:0 0 22px rgba(255,184,77,.3);
+    animation:bannerIn .4s ease;
+  }
+  #choicePopup h3{
+    font-family:'Cinzel',serif;
+    color:var(--trial);
+    margin:0 0 4px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  #choicePopup .cp-sub{font-size:.8rem;color:var(--dim);margin:0 0 14px}
+  .choice-list{display:flex;flex-direction:column;gap:10px}
+  .choice-option{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    background:#1c1433;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    text-align:left;
+  }
+  .choice-option:hover:not(:disabled){border-color:var(--trial);background:#241a26;transform:translateY(-1px)}
+  .choice-option .co-info{flex:1}
+  .choice-option .co-name{font-weight:700;color:var(--cream);font-size:.92rem}
+  .choice-option .co-desc{font-size:.75rem;color:var(--dim);margin-top:2px}
+  .choice-option .co-pick{
+    background:var(--trial);color:#241a00;font-weight:700;font-size:.78rem;
+    padding:7px 12px;border:none;border-radius:8px;
+  }
 
   #bossBanner{
     display:none;
@@ -278,12 +434,17 @@
 </head>
 <body>
 <div id="game">
+  <button id="resetBtn" onclick="resetGame()">&#8635; Reset</button>
+
   <h1>Mini Monster Battle</h1>
   <p class="sub">A tiny turn-based skirmish</p>
 
   <div class="row">
     <span class="statline">Level <b id="lvl"></b> &nbsp;|&nbsp; XP <b id="xp"></b>/<b id="need"></b></span>
-    <span class="gold-badge">&#9830; <span id="gold"></span> gold</span>
+    <div class="badge-group">
+      <span class="trial-badge">&#127891; <span id="trialPoints"></span>/3</span>
+      <span class="gold-badge">&#9830; <span id="gold"></span> gold</span>
+    </div>
   </div>
   <div class="bar"><div id="xpfill" class="fill xp"></div></div>
 
@@ -302,15 +463,15 @@
   <div class="bar" id="ebar"><div id="efill" class="fill enemy"></div></div>
 
   <div class="moves">
-    <button onclick="move('scratch')">
+    <button onclick="move('scratch')" id="btnScratch">
       <span class="move-name">Scratch</span>
       <span class="move-desc" id="d-scratch"></span>
     </button>
-    <button onclick="move('fire')">
+    <button onclick="move('fire')" id="btnFire">
       <span class="move-name">Fire Blast</span>
       <span class="move-desc" id="d-fire"></span>
     </button>
-    <button onclick="move('heal')">
+    <button onclick="move('heal')" id="btnHeal">
       <span class="move-name">Heal Pulse</span>
       <span class="move-desc" id="d-heal"></span>
     </button>
@@ -326,6 +487,7 @@
     <div class="tabs">
       <button class="tab-btn active" id="tabStatsBtn" onclick="switchTab('stats')">&#9876; Stats</button>
       <button class="tab-btn" id="tabShopBtn" onclick="switchTab('shop')">&#9878; Shop</button>
+      <button class="tab-btn" id="tabGearBtn" onclick="switchTab('gear')">&#127890; Gear</button>
     </div>
 
     <div class="tab-panel active" id="tabStats">
@@ -335,14 +497,32 @@
     <div class="tab-panel" id="tabShop">
       <div id="shop"></div>
     </div>
+
+    <div class="tab-panel" id="tabGear">
+      <div id="gear"></div>
+    </div>
   </div>
 
   <div id="log">Your adventure begins&hellip;</div>
 
+  <div id="bonusQuiz">
+    <h3>&#127775; Wave Trial</h3>
+    <p class="bq-sub">Answer correctly to earn a trial point!</p>
+    <p id="bq"></p>
+    <div id="bqAns"></div>
+  </div>
+
   <div id="quiz">
     <h3>Answer to continue</h3>
+    <p class="quiz-sub">Get it right to earn a trial point toward a free upgrade choice.</p>
     <p id="q"></p>
     <div id="ans"></div>
+  </div>
+
+  <div id="choicePopup">
+    <h3>&#127775; Trial Reward</h3>
+    <p class="cp-sub">3 trial points earned! Choose one free upgrade:</p>
+    <div class="choice-list" id="choiceList"></div>
   </div>
 </div>
 
@@ -360,7 +540,9 @@ const QUIZ_POOL=[
   {q:'A firewall is used to?',a:['Cool down a computer','Filter network traffic','Speed up the CPU','Store backups'],c:1}
 ];
 
-const BOSS_EVERY = 5; // a boss shows up after every 5 normal victories
+const BOSS_EVERY = 10;   // a boss shows up after every 10 wave-clears
+const BONUS_EVERY = 2;   // every 2 wave-clears, answer a question to earn a trial point
+const TRIAL_POINTS_NEEDED = 3; // points needed before a free-upgrade choice pops up
 const BOSS_NAMES = [
   'Grimwald the Ashen',
   'Vex, Herald of Ruin',
@@ -372,6 +554,102 @@ const BOSS_NAMES = [
 ];
 const ENEMY_NAMES = ['Snarling Whelp','Marsh Stalker','Cave Skitterling','Rot Hound','Ember Imp','Fen Wraith'];
 
+/* ---------- equipment definitions ---------- */
+const RARITY_ORDER = ['common','uncommon','rare','epic','legendary'];
+const RARITY_LABEL = {common:'Common',uncommon:'Uncommon',rare:'Rare',epic:'Epic',legendary:'Legendary'};
+const RARITY_BASE_COST = {common:12, uncommon:20, rare:35, epic:55, legendary:90};
+const GEAR_MAX_LEVEL = 10;
+
+const EQUIPMENT_POOL = [
+  // ---- Weapons (bonus: atk, crit, critMult, dodge) ----
+  {id:'w_dagger', name:'Rusty Dagger', icon:'&#128481;', slot:'weapon', rarity:'common',
+    bonuses:{atk:2}, desc:'+2 damage on every attack.'},
+  {id:'w_club', name:'Wooden Club', icon:'&#129691;', slot:'weapon', rarity:'common',
+    bonuses:{atk:1,crit:0.01}, desc:'+1 damage, +1% crit chance.'},
+  {id:'w_ironsword', name:'Iron Sword', icon:'&#9876;', slot:'weapon', rarity:'uncommon',
+    bonuses:{atk:4,crit:0.02}, desc:'+4 damage, +2% crit chance.'},
+  {id:'w_rapier', name:'Steel Rapier', icon:'&#128302;', slot:'weapon', rarity:'uncommon',
+    bonuses:{atk:3,dodge:0.02}, desc:'+3 damage, +2% dodge chance.'},
+  {id:'w_flameblade', name:'Flameforged Blade', icon:'&#128293;', slot:'weapon', rarity:'rare',
+    bonuses:{atk:7,critMult:0.1}, desc:'+7 damage, +0.1x crit damage.'},
+  {id:'w_stormcleaver', name:'Storm Cleaver', icon:'&#9889;', slot:'weapon', rarity:'rare',
+    bonuses:{atk:6,crit:0.03}, desc:'+6 damage, +3% crit chance.'},
+  {id:'w_voidreaver', name:'Void Reaver', icon:'&#127993;', slot:'weapon', rarity:'epic',
+    bonuses:{atk:12,crit:0.05}, desc:'+12 damage, +5% crit chance.'},
+  {id:'w_shadowfang', name:'Shadowfang Cleaver', icon:'&#128123;', slot:'weapon', rarity:'epic',
+    bonuses:{atk:10,critMult:0.15}, desc:'+10 damage, +0.15x crit damage.'},
+  {id:'w_dragonfang', name:'Dragonfang Edge', icon:'&#128009;', slot:'weapon', rarity:'legendary',
+    bonuses:{atk:18,crit:0.05,critMult:0.2}, desc:'+18 damage, +5% crit, +0.2x crit damage.'},
+  {id:'w_worldsplitter', name:'Worldsplitter', icon:'&#9670;', slot:'weapon', rarity:'legendary',
+    bonuses:{atk:15,crit:0.08,dodge:0.02}, desc:'+15 damage, +8% crit, +2% dodge.'},
+
+  // ---- Armor (bonus: hp, armor, dodge, luck, crit) ----
+  {id:'a_leather', name:'Leather Vest', icon:'&#128084;', slot:'armor', rarity:'common',
+    bonuses:{hp:10,armor:0.01}, desc:'+10 max HP, +1% damage reduction.'},
+  {id:'a_padded', name:'Padded Jacket', icon:'&#129513;', slot:'armor', rarity:'common',
+    bonuses:{hp:8,dodge:0.01}, desc:'+8 max HP, +1% dodge chance.'},
+  {id:'a_chain', name:'Chainmail', icon:'&#9993;', slot:'armor', rarity:'uncommon',
+    bonuses:{hp:20,armor:0.02}, desc:'+20 max HP, +2% damage reduction.'},
+  {id:'a_scale', name:'Scale Mail', icon:'&#128375;', slot:'armor', rarity:'uncommon',
+    bonuses:{hp:18,armor:0.015}, desc:'+18 max HP, +1.5% damage reduction.'},
+  {id:'a_plate', name:'Plate of Warding', icon:'&#128737;', slot:'armor', rarity:'rare',
+    bonuses:{hp:35,armor:0.04}, desc:'+35 max HP, +4% damage reduction.'},
+  {id:'a_runed', name:'Runed Cuirass', icon:'&#128220;', slot:'armor', rarity:'rare',
+    bonuses:{hp:28,armor:0.03,luck:0.02}, desc:'+28 max HP, +3% reduction, +2% gold gain.'},
+  {id:'a_aegis', name:'Aegis Bulwark', icon:'&#9974;', slot:'armor', rarity:'epic',
+    bonuses:{hp:55,armor:0.06}, desc:'+55 max HP, +6% damage reduction.'},
+  {id:'a_titanplate', name:'Titanplate', icon:'&#128737;', slot:'armor', rarity:'epic',
+    bonuses:{hp:45,armor:0.05,dodge:0.02}, desc:'+45 max HP, +5% reduction, +2% dodge.'},
+  {id:'a_bastion', name:"Sovereign's Bastion", icon:'&#127984;', slot:'armor', rarity:'legendary',
+    bonuses:{hp:80,armor:0.10,dodge:0.03}, desc:'+80 max HP, +10% reduction, +3% dodge.'},
+  {id:'a_emberproof', name:'Emberproof Aegis', icon:'&#128293;', slot:'armor', rarity:'legendary',
+    bonuses:{hp:65,armor:0.09,crit:0.02}, desc:'+65 max HP, +9% reduction, +2% crit chance.'},
+
+  // ---- Trinkets (bonus: luck, heal, dodge, hybrid) ----
+  {id:'t_lucky', name:'Lucky Charm', icon:'&#127808;', slot:'trinket', rarity:'common',
+    bonuses:{luck:0.03}, desc:'+3% gold from victories.'},
+  {id:'t_copperring', name:'Copper Ring', icon:'&#128142;', slot:'trinket', rarity:'common',
+    bonuses:{luck:0.02,heal:2}, desc:'+2% gold gain, +2 Heal Pulse power.'},
+  {id:'t_locket', name:"Healer's Locket", icon:'&#128142;', slot:'trinket', rarity:'uncommon',
+    bonuses:{heal:8}, desc:'+8 Heal Pulse power.'},
+  {id:'t_vigor', name:'Vial of Vigor', icon:'&#129514;', slot:'trinket', rarity:'uncommon',
+    bonuses:{heal:6,hp:5}, desc:'+6 Heal Pulse power, +5 max HP.'},
+  {id:'t_feather', name:"Windwalker's Feather", icon:'&#129413;', slot:'trinket', rarity:'rare',
+    bonuses:{dodge:0.04}, desc:'+4% dodge chance.'},
+  {id:'t_evasion', name:'Ring of Evasion', icon:'&#128142;', slot:'trinket', rarity:'rare',
+    bonuses:{dodge:0.03,luck:0.02}, desc:'+3% dodge chance, +2% gold gain.'},
+  {id:'t_sage', name:"Sage's Amulet", icon:'&#128302;', slot:'trinket', rarity:'epic',
+    bonuses:{heal:15,luck:0.05}, desc:'+15 Heal Pulse power, +5% gold gain.'},
+  {id:'t_merchant', name:"Merchant's Seal", icon:'&#127890;', slot:'trinket', rarity:'epic',
+    bonuses:{luck:0.06,heal:5}, desc:'+6% gold gain, +5 Heal Pulse power.'},
+  {id:'t_crown', name:'Crown of the Fallen King', icon:'&#128081;', slot:'trinket', rarity:'legendary',
+    bonuses:{atk:8,hp:25,luck:0.08}, desc:'+8 damage, +25 max HP, +8% gold gain.'},
+  {id:'t_phoenix', name:'Phoenix Feather', icon:'&#128293;', slot:'trinket', rarity:'legendary',
+    bonuses:{heal:12,dodge:0.02,luck:0.04}, desc:'+12 heal power, +2% dodge, +4% gold gain.'}
+];
+
+function itemById(id){ return EQUIPMENT_POOL.find(i=>i.id===id); }
+
+function gearLevelCost(def, level){
+  return Math.round(RARITY_BASE_COST[def.rarity] * Math.pow(1.32, level - 1));
+}
+function gearMultiplier(level){
+  return 1 + (Math.max(1,level) - 1) * 0.12;
+}
+
+const NORMAL_RARITY_WEIGHTS = {common:55,uncommon:28,rare:13,epic:3.5,legendary:0.5};
+const BOSS_RARITY_WEIGHTS   = {common:8, uncommon:24,rare:36,epic:24, legendary:8};
+
+function rollRarity(weights){
+  const total = Object.values(weights).reduce((a,b)=>a+b,0);
+  let r = Math.random()*total;
+  for(const rarity of RARITY_ORDER){
+    r -= weights[rarity];
+    if(r <= 0) return rarity;
+  }
+  return RARITY_ORDER[0];
+}
+
 /* ---------- save / state ---------- */
 let s = JSON.parse(localStorage.getItem('mbsave') || '{}');
 let L = s.L || 1, XP = s.XP || 0, N = s.N || 100, M = s.M || 100;
@@ -382,6 +660,13 @@ let HP = (s.HP !== undefined ? s.HP : M);
 let defeats = s.defeats || 0;
 let cool = 0;
 let windCharges = 0;
+let quizActive = false; // true whenever a quiz/bonus-quiz/choice popup is on screen
+let trialPoints = s.trialPoints || 0;
+
+// equipment state: inventory is a list of {uid, id, level}; equipped maps slot -> uid or null
+let inventory = (s.inventory || []).map(i => ({ uid:i.uid, id:i.id, level: i.level || 1 }));
+let equipped = Object.assign({weapon:null, armor:null, trinket:null}, s.equipped || {});
+let uidCounter = s.uidCounter || 1;
 
 let eL = L, eM = 80 + eL*20, eHP = eM, eName = ENEMY_NAMES[0], isBoss = false;
 
@@ -411,16 +696,22 @@ function statCost(key){
 }
 
 function buyStat(key){
+  if(quizActive) return;
   const cost = statCost(key);
   if(gold < cost) return;
   gold -= cost;
   stats[key] += 1;
-  if(key === 'vit'){ M += 10; HP = M; }
+  if(key === 'vit'){ HP = maxHP(); }
   log(`Trained <b>${STAT_ITEMS.find(x=>x.key===key).name}</b>!`, true);
   ui();
 }
 
-/* ---------- shop items (gear) ---------- */
+function grantFreeStat(key){
+  stats[key] += 1;
+  if(key === 'vit'){ HP = maxHP(); }
+}
+
+/* ---------- shop items (gear upgrades, not equipment) ---------- */
 const SHOP_ITEMS = [
   {
     key:'atk', name:'Sharpen Claws', icon:'&#9876;', cat:'Offense',
@@ -450,7 +741,7 @@ const SHOP_ITEMS = [
     key:'hp', name:'Vitality Charm', icon:'&#10084;', cat:'Defense',
     desc:'Permanently raises max HP by 15 and heals you fully.',
     baseCost:30, step:22, max:10,
-    apply:()=>{ M += 15; HP = M; }
+    apply:()=>{ HP = maxHP(); }
   },
   {
     key:'armor', name:'Iron Skin', icon:'&#128737;', cat:'Defense',
@@ -486,29 +777,49 @@ const SHOP_ITEMS = [
 
 function costOf(item){ return item.baseCost + up[item.key]*item.step; }
 function powerCooldown(){ return Math.max(0, 2 - up.cool); }
-function critChance(){ return up.crit * 0.05 + stats.agi * 0.02; }
-function critMultiplier(){ return 1.5 + up.focus * 0.1; }
-function armorReduction(){ return Math.min(0.6, up.armor * 0.03); }
-function dodgeChance(){ return Math.min(0.5, stats.agi * 0.01); }
-function goldMultiplier(){ return 1 + up.luck * 0.1 + stats.wis * 0.02; }
+
+/* ---------- equipment bonus aggregation (level-scaled) ---------- */
+function equipTotals(){
+  const t = {atk:0,hp:0,heal:0,crit:0,armor:0,luck:0,critMult:0,dodge:0};
+  ['weapon','armor','trinket'].forEach(slot=>{
+    const uid = equipped[slot];
+    if(!uid) return;
+    const inst = inventory.find(x=>x.uid===uid);
+    if(!inst) return;
+    const def = itemById(inst.id);
+    if(!def) return;
+    const mult = gearMultiplier(inst.level || 1);
+    Object.keys(def.bonuses).forEach(k=>{ t[k] = (t[k]||0) + def.bonuses[k]*mult; });
+  });
+  return t;
+}
+
+function critChance(){ const e=equipTotals(); return up.crit * 0.05 + stats.agi * 0.02 + e.crit; }
+function critMultiplier(){ const e=equipTotals(); return 1.5 + up.focus * 0.1 + e.critMult; }
+function armorReduction(){ const e=equipTotals(); return Math.min(0.6, up.armor * 0.03 + e.armor); }
+function dodgeChance(){ const e=equipTotals(); return Math.min(0.5, stats.agi * 0.01 + e.dodge); }
+function goldMultiplier(){ const e=equipTotals(); return 1 + up.luck * 0.1 + stats.wis * 0.02 + e.luck; }
 function fireMissChance(){ return Math.max(0, 0.2 - up.swift * 0.05); }
-function strBonus(){ return stats.str; }
-function wisHealBonus(){ return stats.wis * 5; }
+function strBonus(){ const e=equipTotals(); return stats.str + e.atk; }
+function wisHealBonus(){ const e=equipTotals(); return stats.wis * 5 + e.heal; }
+function maxHP(){ const e=equipTotals(); return M + e.hp; }
 
 function save(){
-  localStorage.setItem('mbsave', JSON.stringify({L,XP,N,M,gold,up,stats,HP,defeats}));
+  localStorage.setItem('mbsave', JSON.stringify({L,XP,N,M,gold,up,stats,HP,defeats,inventory,equipped,uidCounter,trialPoints}));
 }
 
 /* ---------- UI ---------- */
 function ui(){
+  const MHP = maxHP();
   lvl.textContent=L; xp.textContent=XP; need.textContent=N;
-  mhp.textContent=M; php.textContent=HP;
+  mhp.textContent=MHP; php.textContent=HP;
   elv.textContent=eL; emhp.textContent=eM; ehp.textContent=eHP;
   document.getElementById('gold').textContent = gold;
+  document.getElementById('trialPoints').textContent = trialPoints;
   document.getElementById('enemyName').textContent = eName;
 
-  pfill.style.width = (HP/M*100)+'%';
-  pfill.classList.toggle('low', HP/M < 0.3);
+  pfill.style.width = (HP/MHP*100)+'%';
+  pfill.classList.toggle('low', HP/MHP < 0.3);
   efill.style.width = (eHP/eM*100)+'%';
   xpfill.style.width = (XP/N*100)+'%';
 
@@ -534,10 +845,16 @@ function ui(){
   document.getElementById('d-power').textContent = cool>0
     ? `cooling down (${cool})`
     : `${35+L*3+up.atk*4+strBonus()} dmg, ${powerCooldown()} turn CD`;
-  powerBtn.disabled = cool>0;
+
+  // lock out all combat actions while a quiz/choice popup is on screen
+  document.getElementById('btnScratch').disabled = quizActive;
+  document.getElementById('btnFire').disabled = quizActive;
+  document.getElementById('btnHeal').disabled = quizActive;
+  powerBtn.disabled = quizActive || cool>0;
 
   renderStats();
   renderShop();
+  renderGear();
   save();
 }
 
@@ -555,16 +872,19 @@ function togglePanel(){
   document.getElementById('shopToggle').innerHTML = open
     ? "&#9878; Open Character Menu"
     : "&#9878; Close Character Menu";
-  if(!open){ renderStats(); renderShop(); }
+  if(!open){ renderStats(); renderShop(); renderGear(); }
 }
 
 function switchTab(name){
-  const isStats = name==='stats';
-  document.getElementById('tabStats').classList.toggle('active', isStats);
-  document.getElementById('tabShop').classList.toggle('active', !isStats);
-  document.getElementById('tabStatsBtn').classList.toggle('active', isStats);
-  document.getElementById('tabShopBtn').classList.toggle('active', !isStats);
-  if(isStats) renderStats(); else renderShop();
+  document.getElementById('tabStats').classList.toggle('active', name==='stats');
+  document.getElementById('tabShop').classList.toggle('active', name==='shop');
+  document.getElementById('tabGear').classList.toggle('active', name==='gear');
+  document.getElementById('tabStatsBtn').classList.toggle('active', name==='stats');
+  document.getElementById('tabShopBtn').classList.toggle('active', name==='shop');
+  document.getElementById('tabGearBtn').classList.toggle('active', name==='gear');
+  if(name==='stats') renderStats();
+  else if(name==='shop') renderShop();
+  else renderGear();
 }
 
 /* ---------- stats panel ---------- */
@@ -588,7 +908,7 @@ function renderStats(){
     const btn=document.createElement('button');
     btn.className='stat-btn';
     btn.textContent = `Train (${cost}\u2666)`;
-    btn.disabled = gold < cost;
+    btn.disabled = gold < cost || quizActive;
     btn.onclick = ()=> buyStat(item.key);
     div.appendChild(btn);
     el.appendChild(div);
@@ -625,7 +945,7 @@ function renderShop(){
     const btn=document.createElement('button');
     btn.className='buy-btn';
     btn.textContent = maxed ? 'Maxed' : `Buy (${cost}\u2666)`;
-    btn.disabled = maxed || gold < cost;
+    btn.disabled = maxed || gold < cost || quizActive;
     btn.onclick = ()=> buy(item);
     div.appendChild(btn);
     el.appendChild(div);
@@ -633,6 +953,7 @@ function renderShop(){
 }
 
 function buy(item){
+  if(quizActive) return;
   const cost = costOf(item);
   if(up[item.key] >= item.max || gold < cost) return;
   gold -= cost;
@@ -642,18 +963,197 @@ function buy(item){
   ui();
 }
 
+/* ---------- gear (equipment) panel ---------- */
+const SLOT_LABELS = {weapon:'Weapon', armor:'Armor', trinket:'Trinket'};
+
+function renderGear(){
+  const el=document.getElementById('gear');
+  if(document.getElementById('panelWrap').style.display!=='block') return;
+  if(!document.getElementById('tabGear').classList.contains('active')) return;
+
+  el.innerHTML = '<div class="panel-title">Equipped Gear</div><div class="slot-row" id="slotRow"></div><div class="panel-title" style="margin-top:16px">Inventory</div><div id="invList"></div>';
+
+  const slotRow = document.getElementById('slotRow');
+  ['weapon','armor','trinket'].forEach(slot=>{
+    const uid = equipped[slot];
+    const inst = uid ? inventory.find(x=>x.uid===uid) : null;
+    const def = inst ? itemById(inst.id) : null;
+    const box = document.createElement('div');
+    box.className = 'slot-box' + (def ? ' filled' : '');
+    if(def){ box.style.borderColor = `var(--r-${def.rarity})`; }
+    box.innerHTML = `
+      <div class="slot-label">${SLOT_LABELS[slot]}</div>
+      <div class="slot-item-name">
+        <span>${def ? def.icon+' '+def.name : 'Empty'}</span>
+        ${def ? `<span class="slot-item-lvl">Lv ${inst.level}/${GEAR_MAX_LEVEL}</span>` : ''}
+      </div>
+    `;
+    const unBtn = document.createElement('button');
+    unBtn.className = 'unequip-btn';
+    unBtn.textContent = 'Unequip';
+    unBtn.disabled = !def || quizActive;
+    unBtn.onclick = ()=> unequip(slot);
+    box.appendChild(unBtn);
+    slotRow.appendChild(box);
+  });
+
+  const invList = document.getElementById('invList');
+  if(inventory.length === 0){
+    invList.innerHTML = '<div class="inv-empty">No equipment yet — defeat enemies for a chance to find gear.</div>';
+    return;
+  }
+
+  // sort: rarity (high to low), then slot
+  const sorted = [...inventory].sort((a,b)=>{
+    const da=itemById(a.id), db=itemById(b.id);
+    const ra = RARITY_ORDER.indexOf(da.rarity), rb = RARITY_ORDER.indexOf(db.rarity);
+    if(rb !== ra) return rb - ra;
+    return da.slot.localeCompare(db.slot);
+  });
+
+  sorted.forEach(inst=>{
+    const def = itemById(inst.id);
+    const isEquipped = equipped[def.slot] === inst.uid;
+    const isMaxed = inst.level >= GEAR_MAX_LEVEL;
+    const lvlCost = gearLevelCost(def, inst.level);
+
+    const div = document.createElement('div');
+    div.className = 'inv-item';
+    div.style.borderLeftColor = `var(--r-${def.rarity})`;
+    div.innerHTML = `
+      <div class="info">
+        <div class="name">${def.icon} ${def.name}<span class="rarity-tag" style="color:var(--r-${def.rarity})">${RARITY_LABEL[def.rarity]}</span><span class="lvl-tag">Lv ${inst.level}/${GEAR_MAX_LEVEL}</span></div>
+        <div class="slot-tag">${SLOT_LABELS[def.slot]}</div>
+        <div class="desc">${def.desc}</div>
+      </div>
+    `;
+    const actions = document.createElement('div');
+    actions.className = 'inv-actions';
+
+    const equipBtn = document.createElement('button');
+    equipBtn.className = 'equip-btn' + (isEquipped ? ' equipped' : '');
+    equipBtn.textContent = isEquipped ? 'Equipped' : 'Equip';
+    equipBtn.disabled = isEquipped || quizActive;
+    equipBtn.onclick = ()=> equipItem(inst.uid);
+    actions.appendChild(equipBtn);
+
+    const lvlBtn = document.createElement('button');
+    lvlBtn.className = 'levelup-btn' + (isMaxed ? ' maxed' : '');
+    lvlBtn.textContent = isMaxed ? 'MAX' : `Lvl Up (${lvlCost}\u2666)`;
+    lvlBtn.disabled = isMaxed || gold < lvlCost || quizActive;
+    lvlBtn.onclick = ()=> levelUpGear(inst.uid);
+    actions.appendChild(lvlBtn);
+
+    div.appendChild(actions);
+    invList.appendChild(div);
+  });
+}
+
+function equipItem(uid){
+  if(quizActive) return;
+  const inst = inventory.find(x=>x.uid===uid);
+  if(!inst) return;
+  const def = itemById(inst.id);
+  const wasFull = HP >= maxHP();
+  equipped[def.slot] = uid;
+  if(wasFull) HP = maxHP();
+  log(`Equipped <b>${def.name}</b>.`, true);
+  ui();
+}
+
+function unequip(slot){
+  if(quizActive) return;
+  if(!equipped[slot]) return;
+  const wasFull = HP >= maxHP();
+  equipped[slot] = null;
+  HP = Math.min(HP, maxHP());
+  if(wasFull) HP = maxHP();
+  log(`Unequipped item from ${SLOT_LABELS[slot]} slot.`, true);
+  ui();
+}
+
+function levelUpGear(uid){
+  if(quizActive) return;
+  const inst = inventory.find(x=>x.uid===uid);
+  if(!inst) return;
+  const def = itemById(inst.id);
+  if(inst.level >= GEAR_MAX_LEVEL) return;
+  const cost = gearLevelCost(def, inst.level);
+  if(gold < cost) return;
+  const wasFull = HP >= maxHP();
+  gold -= cost;
+  inst.level += 1;
+  if(wasFull) HP = maxHP();
+  log(`<b class="bonus-text">${def.icon} ${def.name}</b> leveled up to Lv ${inst.level}!`, true);
+  ui();
+}
+
+/* ---------- loot drops ---------- */
+function dropEquipment(bossFight){
+  const weights = bossFight ? BOSS_RARITY_WEIGHTS : NORMAL_RARITY_WEIGHTS;
+  const rarity = rollRarity(weights);
+  let pool = EQUIPMENT_POOL.filter(i=>i.rarity===rarity);
+  if(pool.length===0) pool = EQUIPMENT_POOL;
+  const def = pool[Math.floor(Math.random()*pool.length)];
+  const uid = uidCounter++;
+  inventory.push({uid, id:def.id, level:1});
+  log(`<b class="drop-${def.rarity}">${def.icon} ${def.name} dropped!</b> (${RARITY_LABEL[def.rarity]} ${SLOT_LABELS[def.slot]})`, true);
+}
+
+function maybeDropLoot(bossFight){
+  if(bossFight){
+    dropEquipment(true);
+    if(Math.random() < 0.25) dropEquipment(true);
+  } else {
+    if(Math.random() < 0.45) dropEquipment(false);
+  }
+}
+
+/* ---------- reset ---------- */
+function resetGame(){
+  const ok = confirm('Reset your character? This wipes your level, gold, every upgrade, and all equipment — there is no undo.');
+  if(!ok) return;
+
+  localStorage.removeItem('mbsave');
+
+  L = 1; XP = 0; N = 100; M = 100;
+  gold = 0;
+  up = {atk:0, hp:0, heal:0, cool:0, crit:0, armor:0, luck:0, wind:0, focus:0, swift:0};
+  stats = {str:0, vit:0, agi:0, wis:0};
+  inventory = [];
+  equipped = {weapon:null, armor:null, trinket:null};
+  uidCounter = 1;
+  HP = M;
+  defeats = 0;
+  cool = 0;
+  windCharges = 0;
+  quizActive = false;
+  trialPoints = 0;
+
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('bonusQuiz').style.display = 'none';
+  document.getElementById('choicePopup').style.display = 'none';
+
+  eName = ENEMY_NAMES[Math.floor(Math.random()*ENEMY_NAMES.length)];
+  isBoss = false;
+  eL = L; eM = 80 + eL*20; eHP = eM;
+
+  log('<b class="reset-text">Your character has been reset. A new adventure begins&hellip;</b>');
+  ui();
+}
+
 /* ---------- battle ---------- */
 function gain(v){
   XP += v;
   while(XP >= N){
-    XP -= N; L++; N += 50; M += 20; HP = M;
+    XP -= N; L++; N += 50; M += 20; HP = maxHP();
     log('<b>Level Up!</b>', true);
   }
   ui();
 }
 
 function newEnemy(){
-  HP = M;
+  HP = maxHP();
   cool = 0;
   windCharges = up.wind;
 
@@ -719,6 +1219,8 @@ function enemy(){
 function rollCrit(){ return Math.random() < critChance(); }
 
 function move(m){
+  if(quizActive) return; // can't act while a quiz/choice popup is on screen
+
   let d = 0, crit = false;
 
   if(m === 'scratch'){
@@ -736,7 +1238,7 @@ function move(m){
   }
   if(m === 'heal'){
     const h = 25 + L*2 + up.heal*5 + wisHealBonus();
-    HP = Math.min(M, HP + h);
+    HP = Math.min(maxHP(), HP + h);
     log('Heal Pulse restored '+h+' HP');
     ui(); enemy(); return;
   }
@@ -762,30 +1264,50 @@ function move(m){
       gold += goldWon;
       gain(60 + eL*15);
       log(`<b class="boss-text">${eName} has fallen!</b> Found ${goldWon} gold. Fully healed.`, true);
-      defeats++;
-      setTimeout(newEnemy, 900);
     } else {
       const goldWon = Math.round((15 + eL*8) * goldMultiplier());
       gold += goldWon;
       gain(25 + eL*10);
       log(`<b>Victory!</b> Found ${goldWon} gold. Fully healed.`, true);
-      defeats++;
-      setTimeout(newEnemy, 800);
     }
+    maybeDropLoot(isBoss);
+    defeats++;
+    afterVictory();
   } else {
     ui();
     enemy();
   }
 }
 
+/* ---------- what happens right after a win ---------- */
+function afterVictory(){
+  ui();
+  if(defeats % BONUS_EVERY === 0){
+    setTimeout(bonusQuizGate, 700);
+  } else {
+    setTimeout(newEnemy, 800);
+  }
+}
+
+/* ---------- trial point system ---------- */
+function earnTrialPoint(){
+  trialPoints++;
+  if(trialPoints >= TRIAL_POINTS_NEEDED){
+    trialPoints -= TRIAL_POINTS_NEEDED;
+    return true; // threshold reached, caller should show the choice popup
+  }
+  return false;
+}
+
+/* ---------- lose-quiz (correct answer earns a trial point) ---------- */
 function quizGate(){
+  quizActive = true;
   const box=document.getElementById('quiz');
   box.style.display='block';
   const x=QUIZ_POOL[Math.floor(Math.random()*QUIZ_POOL.length)];
   document.getElementById('q').textContent=x.q;
   const ans=document.getElementById('ans');
   ans.innerHTML='';
-  // shuffle answer order so the correct index isn't always in the same spot
   const order = x.a.map((t,i)=>i);
   for(let i=order.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
@@ -795,11 +1317,119 @@ function quizGate(){
     const b=document.createElement('button');
     b.textContent=x.a[i];
     b.onclick=()=>{
-      if(i===x.c){ box.style.display='none'; newEnemy(); }
-      else alert('Try again');
+      if(i===x.c){
+        ans.querySelectorAll('button').forEach(btn=>btn.disabled=true);
+        const reachedGoal = earnTrialPoint();
+        log(`<b class="trial-text">Correct!</b> Trial point earned (${trialPoints}/${TRIAL_POINTS_NEEDED}).`, true);
+        box.style.display='none';
+        ui();
+        if(reachedGoal){
+          setTimeout(()=> showUpgradeChoice(newEnemy), 500);
+        } else {
+          quizActive = false;
+          setTimeout(newEnemy, 600);
+        }
+      } else {
+        alert('Try again');
+      }
     };
     ans.appendChild(b);
   });
+  ui();
+}
+
+/* ---------- bonus wave-trial quiz (every BONUS_EVERY wins, correct answer earns a point) ---------- */
+function bonusQuizGate(){
+  quizActive = true;
+  const box=document.getElementById('bonusQuiz');
+  box.style.display='block';
+  const x=QUIZ_POOL[Math.floor(Math.random()*QUIZ_POOL.length)];
+  document.getElementById('bq').textContent=x.q;
+  const ans=document.getElementById('bqAns');
+  ans.innerHTML='';
+  const order = x.a.map((t,i)=>i);
+  for(let i=order.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [order[i],order[j]]=[order[j],order[i]];
+  }
+  order.forEach(i=>{
+    const b=document.createElement('button');
+    b.textContent=x.a[i];
+    b.onclick=()=>{
+      ans.querySelectorAll('button').forEach(btn=>btn.disabled=true);
+      let reachedGoal = false;
+      if(i===x.c){
+        reachedGoal = earnTrialPoint();
+        log(`<b class="trial-text">Correct!</b> Trial point earned (${trialPoints}/${TRIAL_POINTS_NEEDED}).`, true);
+      } else {
+        log('You missed the Wave Trial question — no trial point this time.', true);
+      }
+      box.style.display='none';
+      ui();
+      if(reachedGoal){
+        setTimeout(()=> showUpgradeChoice(newEnemy), 500);
+      } else {
+        quizActive = false;
+        setTimeout(newEnemy, 600);
+      }
+    };
+    ans.appendChild(b);
+  });
+  ui();
+}
+
+/* ---------- upgrade choice popup (shown once 3 trial points are earned) ---------- */
+function buildUpgradeCandidates(n){
+  const pool = [];
+  SHOP_ITEMS.filter(i => up[i.key] < i.max).forEach(i => pool.push({ type:'shop', item:i }));
+  STAT_ITEMS.forEach(i => pool.push({ type:'stat', item:i }));
+
+  // shuffle
+  for(let i=pool.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [pool[i],pool[j]]=[pool[j],pool[i]];
+  }
+  return pool.slice(0, Math.min(n, pool.length));
+}
+
+function showUpgradeChoice(onDone){
+  quizActive = true;
+  const box = document.getElementById('choicePopup');
+  const list = document.getElementById('choiceList');
+  list.innerHTML = '';
+  const candidates = buildUpgradeCandidates(3);
+
+  candidates.forEach(c => {
+    const opt = document.createElement('button');
+    opt.className = 'choice-option';
+    const name = c.type === 'shop' ? `${c.item.icon} ${c.item.name}` : `${c.item.icon} ${c.item.name}`;
+    const desc = c.item.desc;
+    opt.innerHTML = `
+      <div class="co-info">
+        <div class="co-name">${name}</div>
+        <div class="co-desc">${desc}</div>
+      </div>
+      <span class="co-pick">Choose</span>
+    `;
+    opt.onclick = () => {
+      if(c.type === 'shop'){
+        up[c.item.key] += 1;
+        c.item.apply();
+        log(`<b class="trial-text">Trial reward claimed:</b> ${c.item.icon} ${c.item.name}`, true);
+      } else {
+        grantFreeStat(c.item.key);
+        log(`<b class="trial-text">Trial reward claimed:</b> ${c.item.icon} ${c.item.name} stat point`, true);
+      }
+      box.style.display = 'none';
+      quizActive = false;
+      ui();
+      if(onDone) setTimeout(onDone, 500);
+    };
+    list.appendChild(opt);
+  });
+
+  box.style.display = 'block';
+  ui();
 }
 
 // initial enemy name for the very first fight
