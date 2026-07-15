@@ -379,20 +379,23 @@
         }
         this.vx = moveAxis * this.speed * speedMultiplier;
 
-        if (jump && this.grounded) {
-          this.vy = -this.jumpPower * jumpMultiplier;
-          this.grounded = false;
-          this.jumpCount = 1;
-          this.jumpPressed = true;
-          game.sound.playJump();
-        } else if (jump && !this.jumpPressed && this.jumpCount < this.maxJumpCount) {
-          this.vy = -this.jumpPower * 0.95 * jumpMultiplier;
-          this.jumpCount += 1;
-          this.jumpPressed = true;
-          game.sound.playJump();
-        } else if (!jump) {
-          this.jumpPressed = false;
+        // Handle jump with proper press detection
+        const jumpPressed = jump && !this.jumpPressed;
+        
+        if (jumpPressed) {
+          if (this.grounded) {
+            this.vy = -this.jumpPower * jumpMultiplier;
+            this.grounded = false;
+            this.jumpCount = 1;
+            game.sound.playJump();
+          } else if (this.jumpCount < this.maxJumpCount) {
+            this.vy = -this.jumpPower * 0.95 * jumpMultiplier;
+            this.jumpCount += 1;
+            game.sound.playJump();
+          }
         }
+        
+        this.jumpPressed = jump;
 
         this.vy += 900 * dt;
         this.x += this.vx * dt;
