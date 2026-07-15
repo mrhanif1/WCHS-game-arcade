@@ -56,9 +56,11 @@ body{min-height:100vh;display:flex;justify-content:center;align-items:center;pad
 .light-theme .settings-section{background:rgba(0,0,0,0.02);border:1px solid rgba(0,0,0,0.1)}
 .setting-group{display:flex;align-items:center;gap:10px;font-size:0.95rem}
 .setting-label{color:var(--muted);min-width:90px;font-weight:600}
-.setting-input{flex:1;padding:8px 10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:var(--text);font-size:0.95rem;cursor:pointer;transition:background 0.2s ease}
+.setting-input{flex:1;padding:8px 10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#ffffff;font-size:0.95rem;cursor:pointer;transition:background 0.2s ease;appearance:none;-webkit-appearance:none;-moz-appearance:none}
 .setting-input:hover{background:rgba(255,255,255,0.15)}
-.light-theme .setting-input{background:rgba(0,0,0,0.08);border:1px solid rgba(0,0,0,0.2);color:#1a1a1a}
+.setting-input option{background:#121833;color:#ffffff}
+.light-theme .setting-input{background:#ffffff;border:1px solid rgba(0,0,0,0.2);color:#1a1a1a}
+.light-theme .setting-input option{background:#ffffff;color:#1a1a1a}
 
 .topic-summary{margin:14px 0 8px;color:var(--warn);font-size:0.95rem;font-weight:700}
 .topic-button{width:100%;padding:12px 14px;border:1px solid rgba(255,255,255,0.16);border-radius:12px;background:rgba(255,255,255,0.08);color:var(--text);font-size:0.95rem;font-weight:700;cursor:pointer;margin-top:8px;transition:background 0.2s ease}
@@ -161,3 +163,4 @@ body{min-height:100vh;display:flex;justify-content:center;align-items:center;pad
   .topic-grid{grid-template-columns:1fr}
   .top-controls{right:10px;top:10px}
 }
+
