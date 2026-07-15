@@ -1,1 +1,38 @@
-
+<!DOCTYPE html>
+<html lang='en'><head><meta charset='UTF-8'><title>GCSE Football Manager</title>
+<style>
+body{font-family:Arial;background:#0d3b2a;color:#fff;text-align:center}
+table{margin:auto;border-collapse:collapse}td,th{border:1px solid #fff;padding:6px}
+button,select{padding:8px;margin:6px}
+</style></head><body>
+<h1>⚽ GCSE Football Manager ⚽</h1>
+<select id="team"></select><button onclick="start()">Start Season</button><div id="game"></div>
+<script>
+const teams=["Accrington Stanley","Barnet","Bristol Rovers","Cheltenham Town","Chesterfield","Colchester United","Crawley Town","Crewe Alexandra","Exeter City","Fleetwood Town","Gillingham","Grimsby Town","Newport County","Northampton","Port Vale","Oldham Athletic","Rochdale","Rotherham","Salford City","Shrewsbury","Swindon Town","Tranmere Rovers","Walsall","York City"];
+const base=[
+["CPU stands for?",["Central Processing Unit","Computer Power Unit","Central Program Utility","Control Processing Unit"],0],
+["Which storage is magnetic?",["SSD","Hard Drive","DVD","USB"],1],
+["Binary of 10?",["1010","1001","1111","0010"],0],
+["Hex for 15?",["F","E","D","10"],0],
+["RAM is...",["Volatile","Optical","Magnetic","Permanent"],0],
+["What does ROM store?",["Firmware","Photos","Games","Cache"],0]
+];
+let questions=[];for(let i=0;i<10;i++)base.forEach(q=>questions.push({q:q[0],a:q[1],c:q[2]}));
+teams.forEach(t=>{let o=document.createElement('option');o.text=t;team.appendChild(o)});
+let pts=0,match=0,res=[];
+function start(){pts=0;match=0;res=[];ask();}
+function ask(){if(match>=46)return finish();let q=questions[Math.floor(Math.random()*questions.length)];window.qq=q;
+game.innerHTML=`<h2>Match ${match+1}/46</h2><h3>${q.q}</h3>`+q.a.map((x,i)=>`<button onclick="ans(${i})">${x}</button>`).join("<br>");}
+function ans(i){if(i===qq.c){pts+=3;res.push("✅ Win")}else res.push("❌ Loss");match++;if(match%4===0&&match<46)league();else ask();}
+function league(){let arr=teams.map(n=>({n,p:n===team.value?pts:Math.floor(Math.random()*(match*3+1))})).sort((a,b)=>b.p-a.p);
+let h=`<h2>League after ${match} games</h2><table><tr><th>Pos</th><th>Team</th><th>Pts</th></tr>`;
+arr.forEach((c,i)=>h+=`<tr><td>${i+1}</td><td>${c.n}</td><td>${c.p}</td></tr>`);h+="</table><p>"+res.join(" | ")+"</p><button onclick='ask()'>Continue</button>";game.innerHTML=h;}
+function finish(){let arr=teams.map(n=>({n,p:n===team.value?pts:Math.floor(Math.random()*139)})).sort((a,b)=>b.p-a.p);
+let pos=arr.findIndex(x=>x.n===team.value)+1;let h="<h2>Final Table</h2><table><tr><th>Pos</th><th>Team</th><th>Pts</th></tr>";
+arr.forEach((c,i)=>h+=`<tr><td>${i+1}</td><td>${c.n}</td><td>${c.p}</td></tr>`);h+="</table>";
+if(pos<=2){h+="<h1>🏆 Automatic Promotion!</h1>";game.innerHTML=h;return;}
+if(pos<=6){window.ps=0;game.innerHTML=h+"<h2>Play-offs!</h2><button onclick='po(0)'>Start</button>";return;}
+game.innerHTML=h+"<h2>Season Over</h2>";}
+function po(r){let q=questions[Math.floor(Math.random()*questions.length)];window.pq=q;game.innerHTML=`<h2>Play-off ${r+1}/2</h2><h3>${q.q}</h3>`+q.a.map((x,i)=>`<button onclick='pa(${i},${r})'>${x}</button>`).join("<br>");}
+function pa(i,r){if(i===pq.c)ps++;if(r===1)game.innerHTML=ps===2?"<h1>🏆 Promoted via Play-offs!</h1>":"<h1>Play-off Defeat</h1>";else po(1);}
+</script></body></html>
