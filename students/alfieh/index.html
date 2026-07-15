@@ -344,6 +344,7 @@
         this.jumpsUsed = 0;
         this.wallJumpCooldown = 0;
         this.invulnerableTimer = 0;
+        this.jumpPressed = false;
       }
 
       reset(x, y) {
@@ -382,11 +383,15 @@
           this.vy = -this.jumpPower * jumpMultiplier;
           this.grounded = false;
           this.jumpCount = 1;
+          this.jumpPressed = true;
           game.sound.playJump();
-        } else if (jump && this.jumpCount < this.maxJumpCount) {
+        } else if (jump && !this.jumpPressed && this.jumpCount < this.maxJumpCount) {
           this.vy = -this.jumpPower * 0.95 * jumpMultiplier;
           this.jumpCount += 1;
+          this.jumpPressed = true;
           game.sound.playJump();
+        } else if (!jump) {
+          this.jumpPressed = false;
         }
 
         this.vy += 900 * dt;
