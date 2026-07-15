@@ -488,6 +488,7 @@
         this.throwTimer = 0;
         this.dir = -1;
         this.batProjectiles = [];
+        this.hasKilled = false;
       }
 
       update(dt, game) {
@@ -540,7 +541,8 @@
           game.bonkTimer = 0.7;
           player.invulnerableTimer = 0.3;
         }
-        if (Math.abs(range) < 90 && player.invulnerableTimer <= 0 && this.attackTimer > 0.1) {
+        if (Math.abs(range) < 90 && player.invulnerableTimer <= 0 && this.attackTimer > 0.1 && !this.hasKilled) {
+          this.hasKilled = true;
           game.killPlayer("tung");
         }
       }
