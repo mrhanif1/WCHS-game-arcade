@@ -1,55 +1,368 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My GCSE Computing Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>GCSE Football Manager Revision</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
+<button onclick="document.location='https://mrhanif1.github.io/WCHS-game-arcade/'">Back to arcade</button>
+<style>
+body{
+    background:#0d3b2a;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+}
 
-    .game-box {
-      max-width: 700px;
-      margin: auto;
-      background: #1f2937;
-      padding: 25px;
-      border-radius: 15px;
-    }
+.container{
+    width:800px;
+    margin:auto;
+}
 
-    button {
-      display: block;
-      width: 90%;
-      max-width: 400px;
-      margin: 10px auto;
-      padding: 12px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-    }
+button{
+    padding:10px 20px;
+    margin:8px;
+    font-size:16px;
+    cursor:pointer;
+}
 
-    a {
-      color: #93c5fd;
-    }
-  </style>
+select{
+    padding:8px;
+    font-size:16px;
+}
+
+#questionBox{
+    margin-top:30px;
+}
+
+table{
+    margin:auto;
+    border-collapse:collapse;
+    width:80%;
+}
+
+td,th{
+    border:1px solid white;
+    padding:8px;
+}
+
+.correct{
+    color:lime;
+}
+
+.wrong{
+    color:red;
+}
+</style>
+
 </head>
-
 <body>
-  <div class="game-box">
-    <h1>My GCSE Computing Game</h1>
-    <p>This is my starter page. I will turn this into an interactive GCSE revision game.</p>
 
-    <button onclick="alert('Game starting soon!')">Start Game</button>
+<div class="container">
 
-    <p>
-      <a href="../../">Back to Arcade</a>
-    </p>
-  </div>
+<h1>⚽ GCSE Football Manager ⚽</h1>
+
+<p>Choose your team:</p>
+
+<select id="teamSelect"></select>
+
+<br><br>
+
+<button onclick="startGame()">Start Season</button>
+
+<div id="game"></div>
+
+</div>
+
+<script>
+
+const teams=[
+"Accrington Stanley",
+"Barnet",
+"Bristol Rovers",
+"Cheltenham Town",
+"Chesterfield",
+"Colchester United",
+"Crawley Town",
+"Crewe Alexandra",
+"Exeter City",
+"Fleetwood Town",
+"Gillingham",
+"Grimsby Town",
+"Newport County",
+"Northampton",
+"Port Vale",
+"Oldham Athletic",
+"Rochdale",
+"Rotherham",
+"Salford City",
+"Shrewsbury",
+"Swindon Town",
+"Tranmere Rovers",
+"Walsall",
+"York City"
+];
+
+const questions=[
+
+{
+q:"Which of these is not a logic gate?",
+a:["AND","MAYBE","OR","NOT"],
+c:1
+},
+{
+q:"What does an accumulator do?",
+a:["Performs and stores calculations","Only store calculations","Only perform calculations","Performs boolean calculations"],
+c:1
+},
+{
+q:"Which of these is not a register?",
+a:["ALU","MAR","CU","PC"],
+c:2
+},
+{
+q:"What is the name of the CPU structure we have studied?",
+a:["Van Neumann","Von Neumann","Van Norman","Von Neumann"],
+c:1
+},
+{
+q:"What is the value of 11 in hexadecimal terms??",
+a:["B","C","A","F"],
+c:0
+},
+{
+q:"What is the denary value of 01101101?",
+a:["107","109","111","113"],
+c:1
+},
+{
+q:"What is the binary representation of 3E?",
+a:["00111110","00101111","00111111","00101110"],
+c:0
+},
+{
+q:"In binary, which of these is false?",
+a:["0+0 = 0","0 + 1 = 0","1 + 0 = 1","1 + 1 = 11"],
+c:3
+},
+{
+q:"Which of these is not a high-level language?",
+a:["Python","Cobra","CSS","HTML"],
+c:1
+},
+{
+q:"Which of the following is an example of magnetic storage?",
+a:["Blu-Ray","Hard Drive","SSD","USB Flash Drive"],
+c:1
+},
+{
+q:"In which algorithm does the list of numbers need to be ordered?",
+a:["Merge","Insertion","Bubble","Binary"],
+c:3
+},
+{
+q:"What metal is twisted to make ethernet cables?",
+a:["Iron","Aluminium","Copper","Potassium"],
+c:2
+},
+{
+q:"Which of the following is not a factor for CPU performance?",
+a:["Clock Speed","Number of Users","Cache Size","Number of Cores"],
+c:1
+},
+{
+q:"which of these is not a factor that effects wired network performance?",
+a:["Signal Strength","Bandwidth","Number of Users","Packet Loss"],
+c:0
+}
+];
+
+let playerPoints=0;
+let currentQuestion=0;
+let playoffCorrect=0;
+
+teams.forEach(team=>{
+let option=document.createElement("option");
+option.textContent=team;
+teamSelect.appendChild(option);
+});
+
+function startGame(){
+
+playerPoints=0;
+currentQuestion=0;
+playoffCorrect=0;
+
+document.getElementById("game").innerHTML="";
+
+askQuestion();
+
+}
+
+function askQuestion(){
+
+if(currentQuestion>=12){
+finishSeason();
+return;
+}
+
+let q=questions[currentQuestion];
+
+let html=`<div id='questionBox'>
+<h2>Question ${currentQuestion+1}/12</h2>
+<h3>${q.q}</h3>`;
+
+q.a.forEach((answer,index)=>{
+html+=`<button onclick='answer(${index})'>${answer}</button><br>`;
+});
+
+html+="</div>";
+
+game.innerHTML=html;
+
+}
+
+function answer(choice){
+
+let q=questions[currentQuestion];
+
+if(choice===q.c){
+playerPoints+=3;
+}
+
+currentQuestion++;
+
+askQuestion();
+
+}
+
+function finishSeason(){
+
+let playerTeam=teamSelect.value;
+
+let league=[];
+
+teams.forEach(team=>{
+
+if(team===playerTeam){
+
+league.push({
+team:team,
+points:playerPoints
+});
+
+}else{
+
+league.push({
+team:team,
+points:Math.floor(Math.random()*36)+1
+});
+
+}
+
+});
+
+league.sort((a,b)=>b.points-a.points);
+
+let html="<h2>Final League Table</h2>";
+
+html+="<table>";
+
+html+="<tr><th>Pos</th><th>Team</th><th>Pts</th></tr>";
+
+let position=0;
+
+league.forEach((club,index)=>{
+
+html+=`<tr>
+<td>${index+1}</td>
+<td>${club.team}</td>
+<td>${club.points}</td>
+</tr>`;
+
+if(club.team===playerTeam)
+position=index+1;
+
+});
+
+html+="</table>";
+
+if(position<=2){
+
+html+="<h1 class='correct'>🏆 Automatic Promotion! You Win!</h1>";
+
+}
+else if(position<=6){
+
+html+=`
+<h2>You qualified for the Playoffs!</h2>
+<p>Answer TWO questions correctly to win.</p>
+<button onclick='playoffs()'>Start Playoffs</button>
+`;
+
+}
+else{
+
+html+="<h1 class='wrong'>Season Over. Play Again!</h1>";
+
+}
+
+game.innerHTML=html;
+
+}
+
+function playoffs(){
+
+playoffCorrect=0;
+
+playoffRound(0);
+
+}
+
+function playoffRound(round){
+
+let q=questions[Math.floor(Math.random()*questions.length)];
+
+let html=`<h2>Playoff Question ${round+1}/2</h2>
+<h3>${q.q}</h3>`;
+
+q.a.forEach((ans,index)=>{
+
+html+=`<button onclick='playoffAnswer(${index},${q.c},${round})'>${ans}</button><br>`;
+
+});
+
+game.innerHTML=html;
+
+}
+
+function playoffAnswer(choice,correct,round){
+
+if(choice===correct)
+playoffCorrect++;
+
+if(round===1){
+
+if(playoffCorrect===2){
+
+game.innerHTML="<h1 class='correct'>🏆 You Won the Playoffs!</h1>";
+
+}else{
+
+game.innerHTML="<h1 class='wrong'>Playoff Defeat! Try Again.</h1>";
+
+}
+
+}else{
+
+playoffRound(1);
+
+}
+
+}
+
+
+
+</script>
+
 </body>
 </html>
