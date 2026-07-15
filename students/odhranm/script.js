@@ -1,8 +1,8 @@
 // Gladiator Logic Arena
 // This game uses plain HTML, CSS and JavaScript only.
 
-// The questions array stores all eight GCSE-style Boolean logic challenges.
-const questions = [
+// The questionPool stores ten GCSE-style challenges mixing Boolean logic and system architecture.
+const questionPool = [
   {
     question: "What is the Boolean value for 'true'?",
     options: ["0", "1", "False", "Maybe"],
@@ -44,28 +44,44 @@ const questions = [
     topic: "Truth Tables"
   },
   {
-    question: "Which logic gate gives an output of 1 when either input is 1?",
-    options: ["AND gate", "OR gate", "NOT gate", "XOR gate"],
-    answer: 1,
-    explanation: "An OR gate outputs 1 if one or both inputs are 1.",
-    equipment: "Red Cape",
-    topic: "Logic Gates"
-  },
-  {
-    question: "What is the result of the expression NOT (True OR False)?",
-    options: ["True", "False", "1", "Error"],
-    answer: 0,
-    explanation: "True OR False is True, and NOT True is False.",
-    equipment: "Golden Spear",
-    topic: "Boolean Expressions"
-  },
-  {
-    question: "A security system opens only if the alarm is off and the door is unlocked. Which logic expression matches this?",
-    options: ["Alarm OR Door", "Alarm AND Door", "NOT Alarm AND Door", "Alarm AND NOT Door"],
+    question: "Which expression is true only when one input is true and the other is false?",
+    options: ["A OR B", "A AND B", "A XOR B", "NOT A"],
     answer: 2,
-    explanation: "The system opens when the alarm is off and the door is unlocked, so NOT Alarm AND Door.",
+    explanation: "XOR is true when exactly one input is true.",
+    equipment: "Red Cape",
+    topic: "XOR"
+  },
+  {
+    question: "What is the main job of the CPU in a computer system?",
+    options: ["To print documents", "To process instructions", "To store files permanently", "To connect to the internet"],
+    answer: 1,
+    explanation: "The CPU processes instructions and carries out calculations.",
+    equipment: "Processor Badge",
+    topic: "CPU"
+  },
+  {
+    question: "Which part of the computer stores data temporarily while the CPU is working?",
+    options: ["RAM", "ROM", "Hard drive", "Keyboard"],
+    answer: 0,
+    explanation: "RAM is temporary working memory used while programs are running.",
+    equipment: "Memory Chip",
+    topic: "Memory"
+  },
+  {
+    question: "Which of these is an input device?",
+    options: ["Monitor", "Printer", "Keyboard", "Speaker"],
+    answer: 2,
+    explanation: "A keyboard sends data into the computer, so it is an input device.",
+    equipment: "Input Module",
+    topic: "Input/Output"
+  },
+  {
+    question: "What does the fetch-execute cycle describe?",
+    options: ["How the CPU receives and carries out instructions", "How files are copied to a USB drive", "How a mouse moves on screen", "How speakers create sound"],
+    answer: 0,
+    explanation: "The fetch-execute cycle is the process of fetching instructions and executing them.",
     equipment: "Champion Armour",
-    topic: "Simple Logic Problem"
+    topic: "System Architecture"
   }
 ];
 
@@ -78,6 +94,7 @@ const state = {
   correctAnswers: 0,
   equipment: [],
   isAnswerLocked: false,
+  isBattleLocked: false,
   musicOn: true,
   highScore: 0,
   musicTimer: null
@@ -107,9 +124,14 @@ const elements = {
   feedbackDetail: document.getElementById("feedback-detail"),
   continueBtn: document.getElementById("continue-btn"),
   battleStatus: document.getElementById("battle-status"),
+  battleStage: document.getElementById("battle-stage"),
   playerFighter: document.getElementById("player-fighter"),
   championFighter: document.getElementById("champion-fighter"),
   battleEffect: document.getElementById("battle-effect"),
+  playerGearBadge: document.getElementById("player-gear-badge"),
+  championGearBadge: document.getElementById("champion-gear-badge"),
+  attackBtn: document.getElementById("attack-btn"),
+  defendBtn: document.getElementById("defend-btn"),
   battleMeterValue: document.getElementById("battle-meter-value"),
   resultTitle: document.getElementById("result-title"),
   resultText: document.getElementById("result-text"),
@@ -132,6 +154,7 @@ const elements = {
 };
 
 let audioContext = null;
+let activeQuestions = [];
 
 // The game is started when the page loads.
 function init() {
@@ -150,7 +173,7 @@ function init() {
 function attachEvents() {
   elements.playBtn.addEventListener("click", () => {
     playSound("click");
-    showStory();
+    startGame();
   });
 
   elements.helpBtn.addEventListener("click", () => {
@@ -179,9 +202,26 @@ function attachEvents() {
     continueFromFeedback();
   });
 
-  elements.battleBtn.addEventListener("click", () => {
-    playSound("sword");
-    runBattleAnimation();
+  elements.attackBtn.addEventListener("click", () => {
+    handleBattleChoice("attack");
+  });
+
+  elements.defendBtn.addEventListener("click", () => {
+    handleBattleChoice("defend");
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!elements.battleScreen.classList.contains("active")) {
+      return;
+    }
+
+    if (event.key === "a" || event.key === "A" || event.key === "ArrowUp") {
+      event.preventDefault();
+      handleBattleChoice("attack");
+    } else if (event.key === "d" || event.key === "D" || event.key === "ArrowDown") {
+      event.preventDefault();
+      handleBattleChoice("defend");
+    }
   });
 
   elements.playAgainBtn.addEventListener("click", () => {
@@ -197,6 +237,10 @@ function attachEvents() {
 
 // A fresh game resets the player stats and begins the story.
 function startGame() {
+  activeQuestions = [...questionPool]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 5);
+
   state.currentQuestionIndex = -1;
   state.lives = 3;
   state.glory = 0;
@@ -204,6 +248,7 @@ function startGame() {
   state.correctAnswers = 0;
   state.equipment = [];
   state.isAnswerLocked = false;
+  state.isBattleLocked = false;
   updateHud();
   showStory();
 }
@@ -213,11 +258,11 @@ function showStory() {
   playSound("cheer");
 }
 
-// Each question is rendered using the data in the questions array.
+// Each question is rendered using the data from the current five-question set.
 function startQuestion(index) {
   state.currentQuestionIndex = index;
   state.isAnswerLocked = false;
-  const question = questions[index];
+  const question = activeQuestions[index];
   elements.questionTitle.textContent = `Question ${index + 1}`;
   elements.questionTopic.textContent = question.topic;
   elements.questionText.textContent = question.question;
@@ -242,12 +287,12 @@ function answerQuestion(optionIndex) {
   }
 
   state.isAnswerLocked = true;
-  const question = questions[state.currentQuestionIndex];
+  const question = activeQuestions[state.currentQuestionIndex];
   const correct = optionIndex === question.answer;
 
   if (correct) {
-    state.glory = Math.min(80, state.glory + 10);
-    state.battlePower = Math.min(8, state.battlePower + 1);
+    state.glory = Math.min(120, state.glory + 10);
+    state.battlePower = Math.min(10, state.battlePower + 1);
     state.correctAnswers += 1;
     if (!state.equipment.includes(question.equipment)) {
       state.equipment.push(question.equipment);
@@ -277,7 +322,7 @@ function showFeedback(isCorrect, equipmentName, explanation) {
   } else {
     elements.feedbackTitle.textContent = "Incorrect";
     elements.feedbackMessage.textContent = `You lost a heart. ${state.lives > 0 ? "Try again with the next challenge." : "Your journey is over."}`;
-    elements.feedbackDetail.textContent = `Correct answer: ${questions[state.currentQuestionIndex].options[questions[state.currentQuestionIndex].answer]}. ${explanation}`;
+    elements.feedbackDetail.textContent = `Correct answer: ${activeQuestions[state.currentQuestionIndex].options[activeQuestions[state.currentQuestionIndex].answer]}. ${explanation}`;
     elements.feedbackPanel.classList.add("feedback-wrong");
     document.body.classList.add("feedback-wrong");
   }
@@ -294,7 +339,7 @@ function continueFromFeedback() {
     return;
   }
 
-  if (state.currentQuestionIndex < questions.length - 1) {
+  if (state.currentQuestionIndex < activeQuestions.length - 1) {
     startQuestion(state.currentQuestionIndex + 1);
   } else {
     showBattle();
@@ -303,7 +348,9 @@ function continueFromFeedback() {
 
 function showBattle() {
   showScreen("battle-screen");
-  elements.battleStatus.textContent = "The arena gates open...";
+  state.isBattleLocked = false;
+  updateBattleCharacters();
+  elements.battleStatus.textContent = "The arena gates open... Choose your move!";
   elements.battleMeterValue.textContent = state.battlePower;
   elements.playerFighter.classList.remove("attacking", "defending");
   elements.championFighter.classList.remove("attacking", "defending");
@@ -311,40 +358,104 @@ function showBattle() {
   playSound("sword");
 }
 
-function runBattleAnimation() {
-  elements.battleStatus.textContent = "The champion charges!";
-  elements.battleMeterValue.textContent = state.battlePower;
-  elements.playerFighter.classList.remove("attacking", "defending");
-  elements.championFighter.classList.remove("attacking", "defending");
-  elements.battleEffect.classList.remove("show");
-  elements.playerFighter.classList.add("attacking");
-  elements.championFighter.classList.add("attacking");
-  elements.battleEffect.classList.add("show");
-  playSound("sword");
+function updateBattleCharacters() {
+  const playerGear = state.equipment.slice(-3);
+  const championGear = ["Champion Armour", "Iron Sword", "Wooden Shield"];
 
-  setTimeout(() => {
-    elements.playerFighter.classList.remove("attacking");
-    elements.championFighter.classList.remove("attacking");
-    elements.playerFighter.classList.add("defending");
-    elements.championFighter.classList.add("defending");
-    elements.battleStatus.textContent = "You strike with your training!";
-    playSound("cheer");
-  }, 1000);
+  elements.playerFighter.className = "fighter player";
+  elements.championFighter.className = "fighter champion";
 
-  setTimeout(() => {
-    const rank = getRank();
-    showFinalResult(rank);
-  }, 2200);
+  elements.playerGearBadge.textContent = playerGear.length > 0 ? playerGear.join(", ") : "No gear yet";
+  elements.championGearBadge.textContent = championGear.join(", ");
 }
 
-function getRank() {
-  if (state.battlePower >= 7) {
+function handleBattleChoice(choice) {
+  if (state.isBattleLocked) {
+    return;
+  }
+
+  state.isBattleLocked = true;
+  const rounds = 3;
+  let playerScore = state.battlePower + 2;
+  let championScore = state.battlePower + 4;
+  let roundIndex = 0;
+
+  function runRound() {
+    roundIndex += 1;
+    const championChoice = Math.random() > 0.45 ? "attack" : "defend";
+    let roundText = "";
+
+    if (choice === "attack") {
+      if (championChoice === "attack") {
+        playerScore += 2;
+        championScore += 3;
+        roundText = "You rush in, but the champion answers with a brutal counter.";
+      } else {
+        playerScore += 4;
+        championScore += 1;
+        roundText = "Your strike lands cleanly and drives the champion back.";
+      }
+    } else {
+      if (championChoice === "attack") {
+        playerScore += 1;
+        championScore += 5;
+        roundText = "You brace yourself, but the champion breaks through your guard.";
+      } else {
+        playerScore += 2;
+        championScore += 2;
+        roundText = "You hold the line and weather the exchange.";
+      }
+    }
+
+    elements.playerFighter.classList.remove("attacking", "defending");
+    elements.championFighter.classList.remove("attacking", "defending");
+    elements.battleEffect.classList.remove("show");
+    elements.battleStage.classList.remove("clashing");
+
+    if (choice === "attack") {
+      elements.playerFighter.classList.add("attacking");
+    } else {
+      elements.playerFighter.classList.add("defending");
+    }
+
+    if (championChoice === "attack") {
+      elements.championFighter.classList.add("attacking");
+    } else {
+      elements.championFighter.classList.add("defending");
+    }
+
+    elements.battleMeterValue.textContent = `${playerScore}/${championScore}`;
+    elements.battleStatus.textContent = `Round ${roundIndex}/${rounds}: ${roundText}`;
+    elements.battleEffect.classList.add("show");
+    elements.battleStage.classList.add("clashing");
+    playSound(roundIndex === 1 ? "sword" : "click");
+
+    setTimeout(() => {
+      elements.battleStage.classList.remove("clashing");
+      if (roundIndex < rounds) {
+        setTimeout(runRound, 400);
+        return;
+      }
+
+      setTimeout(() => {
+        const rank = getRankFromScores(playerScore, championScore);
+        showFinalResult(rank);
+      }, 700);
+    }, 750);
+  }
+
+  runRound();
+}
+
+function getRankFromScores(playerScore, championScore) {
+  const difference = playerScore - championScore;
+  if (difference >= 4) {
     return "Legend Victory";
   }
-  if (state.battlePower >= 5) {
+  if (difference >= 2) {
     return "Veteran Victory";
   }
-  if (state.battlePower >= 3) {
+  if (difference > -2) {
     return "Recruit";
   }
   return "Defeat";
@@ -411,9 +522,11 @@ function updateHud() {
 
   elements.gloryScore.textContent = state.glory;
   elements.battlePower.textContent = state.battlePower;
-  elements.questionNumber.textContent = `${state.currentQuestionIndex >= 0 ? state.currentQuestionIndex + 1 : 0}/${questions.length}`;
-  elements.progressText.textContent = `${state.correctAnswers}/${questions.length}`;
-  elements.progressBar.style.width = `${(state.correctAnswers / questions.length) * 100}%`;
+  const totalQuestions = activeQuestions.length || 5;
+
+  elements.questionNumber.textContent = `${state.currentQuestionIndex >= 0 ? state.currentQuestionIndex + 1 : 0}/${totalQuestions}`;
+  elements.progressText.textContent = `${state.correctAnswers}/${totalQuestions}`;
+  elements.progressBar.style.width = `${(state.correctAnswers / totalQuestions) * 100}%`;
   elements.equipmentList.innerHTML = "";
 
   if (state.equipment.length === 0) {

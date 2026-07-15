@@ -310,11 +310,39 @@ button:focus-visible {
   align-items: center;
   gap: 16px;
   margin: 20px 0 10px;
-  min-height: 240px;
-  padding: 16px;
+  min-height: 280px;
+  padding: 20px;
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.12)),
+    radial-gradient(circle at top, rgba(248, 200, 75, 0.12), transparent 45%),
+    linear-gradient(135deg, #2f160d, #110804 70%);
+  border: 2px solid rgba(248, 200, 75, 0.22);
+  box-shadow: inset 0 0 40px rgba(255,255,255,0.04), 0 12px 30px rgba(0,0,0,0.28);
+  position: relative;
+  overflow: hidden;
+}
+
+.battle-stage::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 2px solid rgba(248, 200, 75, 0.16);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(248, 200, 75, 0.2);
+  pointer-events: none;
+}
+
+.battle-stage::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 3px solid rgba(248, 200, 75, 0.16);
+  box-shadow: 0 0 0 16px rgba(248, 200, 75, 0.05);
 }
 
 .fighter-card {
@@ -325,40 +353,193 @@ button:focus-visible {
 }
 
 .fighter {
-  width: 140px;
-  height: 140px;
+  width: 180px;
+  height: 220px;
   border-radius: 24px;
   position: relative;
   background: linear-gradient(145deg, #5a3821, #2e1308);
   border: 2px solid rgba(248, 200, 75, 0.25);
   box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.08), 0 8px 26px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
 }
 
 .fighter::before {
   content: "";
   position: absolute;
-  width: 84px;
-  height: 84px;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), transparent 30%);
+}
+
+.fighter::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(248, 200, 75, 0.2), transparent 28%),
+    linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.16) 100%);
+  pointer-events: none;
+}
+
+.fighter.player {
+  background:
+    linear-gradient(145deg, #6f4d2a, #2e1308),
+    radial-gradient(circle at top, rgba(255,255,255,0.18), transparent 35%);
+}
+
+.fighter.champion {
+  background:
+    linear-gradient(145deg, #4d2d17, #1a0d06),
+    radial-gradient(circle at top, rgba(255,255,255,0.12), transparent 35%);
+}
+
+.fighter.player .body-figure,
+.fighter.champion .body-figure {
+  position: absolute;
+  inset: 0;
+}
+
+.fighter.player .body-figure::before,
+.fighter.champion .body-figure::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 24px;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(248, 200, 75, 0.45), transparent 70%);
-  top: 18px;
-  left: 24px;
+  background: linear-gradient(145deg, #f2c897, #c97b45);
+  box-shadow: inset 0 -6px 0 rgba(0,0,0,0.16);
+  border: 2px solid rgba(255,255,255,0.15);
 }
 
-.fighter.player::after {
-  content: "⚔";
-  position: absolute;
-  left: 50px;
-  top: 42px;
-  font-size: 2.5rem;
+.fighter.player .body-figure::before {
+  box-shadow: inset 0 -6px 0 rgba(0,0,0,0.16), 0 0 0 2px rgba(255,255,255,0.08);
 }
 
-.fighter.champion::after {
-  content: "🛡";
+.fighter.player .body-figure::after,
+.fighter.champion .body-figure::after {
+  content: "";
   position: absolute;
-  left: 50px;
-  top: 42px;
-  font-size: 2.5rem;
+  left: 50%;
+  top: 78px;
+  transform: translateX(-50%);
+  width: 76px;
+  height: 96px;
+  border-radius: 24px 24px 18px 18px;
+  background: linear-gradient(180deg, #8b4a2d, #3e1d0d);
+  border: 2px solid rgba(248, 200, 75, 0.18);
+}
+
+.fighter.player .body-figure .face,
+.fighter.champion .body-figure .face {
+  position: absolute;
+  left: 50%;
+  top: 34px;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 24px;
+  border-radius: 0 0 20px 20px;
+  background: #f3b577;
+  border: 2px solid rgba(0,0,0,0.08);
+}
+
+.fighter.player .body-figure .face::before,
+.fighter.champion .body-figure .face::before,
+.fighter.player .body-figure .face::after,
+.fighter.champion .body-figure .face::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #2c150c;
+}
+
+.fighter.player .body-figure .face::before,
+.fighter.champion .body-figure .face::before {
+  left: 10px;
+}
+
+.fighter.player .body-figure .face::after,
+.fighter.champion .body-figure .face::after {
+  right: 10px;
+}
+
+.fighter.player .body-figure .arm,
+.fighter.champion .body-figure .arm {
+  position: absolute;
+  top: 88px;
+  width: 16px;
+  height: 68px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c99761, #7a3f23);
+  border: 2px solid rgba(248, 200, 75, 0.16);
+}
+
+.fighter.player .body-figure .arm.left,
+.fighter.champion .body-figure .arm.left {
+  left: 44px;
+  transform: rotate(12deg);
+}
+
+.fighter.player .body-figure .arm.right,
+.fighter.champion .body-figure .arm.right {
+  right: 44px;
+  transform: rotate(-12deg);
+}
+
+.fighter.player .body-figure .leg,
+.fighter.champion .body-figure .leg {
+  position: absolute;
+  bottom: 18px;
+  width: 18px;
+  height: 70px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #2f1508, #120703);
+}
+
+.fighter.player .body-figure .leg.left,
+.fighter.champion .body-figure .leg.left {
+  left: 70px;
+}
+
+.fighter.player .body-figure .leg.right,
+.fighter.champion .body-figure .leg.right {
+  right: 70px;
+}
+
+.fighter.player .body-figure .armor,
+.fighter.champion .body-figure .armor {
+  position: absolute;
+  left: 50%;
+  top: 82px;
+  transform: translateX(-50%);
+  width: 86px;
+  height: 44px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #bfa15a, #6b4919);
+  border: 2px solid rgba(248, 200, 75, 0.2);
+  box-shadow: inset 0 0 8px rgba(255,255,255,0.18);
+}
+
+.fighter.player .gear-badge,
+.fighter.champion .gear-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  background: rgba(248, 200, 75, 0.18);
+  color: var(--gold-2);
+  border: 1px solid rgba(248, 200, 75, 0.2);
+  white-space: nowrap;
+  max-width: calc(100% - 16px);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .fighter-name {
@@ -374,8 +555,8 @@ button:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 90px;
-  height: 90px;
+  width: 120px;
+  height: 120px;
 }
 
 .arena-glow {
@@ -384,12 +565,13 @@ button:focus-visible {
   border-radius: 50%;
   background: radial-gradient(circle, rgba(248, 200, 75, 0.25), transparent 70%);
   animation: pulse 1.4s infinite ease-in-out;
+  box-shadow: 0 0 28px rgba(248, 200, 75, 0.18);
 }
 
 .battle-effect {
   position: absolute;
-  width: 72px;
-  height: 72px;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.6), rgba(248, 200, 75, 0.1), transparent 72%);
   opacity: 0;
@@ -400,16 +582,79 @@ button:focus-visible {
   animation: clashPulse 0.9s ease-out;
 }
 
+.battle-stage.clashing .battle-effect {
+  opacity: 1;
+  animation: directClash 0.75s ease-out;
+}
+
+.battle-stage.clashing .fighter.player.attacking,
+.battle-stage.clashing .fighter.champion.defending {
+  animation: playerImpact 0.75s ease-out;
+}
+
+.battle-stage.clashing .fighter.champion.attacking,
+.battle-stage.clashing .fighter.player.defending {
+  animation: championImpact 0.75s ease-out;
+}
+
+.battle-stage.clashing .fighter.player.attacking .body-figure .arm.left,
+.battle-stage.clashing .fighter.champion.defending .body-figure .arm.left {
+  transform: rotate(58deg) translateX(-4px) !important;
+}
+
+.battle-stage.clashing .fighter.player.attacking .body-figure .arm.right,
+.battle-stage.clashing .fighter.champion.defending .body-figure .arm.right {
+  transform: rotate(-58deg) translateX(4px) !important;
+}
+
+.battle-stage.clashing .fighter.champion.attacking .body-figure .arm.left,
+.battle-stage.clashing .fighter.player.defending .body-figure .arm.left {
+  transform: rotate(-58deg) translateX(4px) !important;
+}
+
+.battle-stage.clashing .fighter.champion.attacking .body-figure .arm.right,
+.battle-stage.clashing .fighter.player.defending .body-figure .arm.right {
+  transform: rotate(58deg) translateX(-4px) !important;
+}
+
 .fighter.attacking {
-  animation: playerStrike 0.8s ease-in-out;
+  animation: playerStrike 0.7s ease-in-out;
 }
 
 .fighter.champion.attacking {
-  animation: championStrike 0.8s ease-in-out;
+  animation: championStrike 0.7s ease-in-out;
 }
 
 .fighter.defending {
-  animation: shieldShake 0.7s ease-in-out;
+  animation: shieldShake 0.6s ease-in-out;
+}
+
+.fighter.player.attacking .body-figure .arm.left,
+.fighter.player.attacking .body-figure .arm.right,
+.fighter.player.defending .body-figure .arm.left,
+.fighter.player.defending .body-figure .arm.right,
+.fighter.champion.attacking .body-figure .arm.left,
+.fighter.champion.attacking .body-figure .arm.right,
+.fighter.champion.defending .body-figure .arm.left,
+.fighter.champion.defending .body-figure .arm.right {
+  transform-origin: top center;
+}
+
+.fighter.player.attacking .body-figure .arm.left,
+.fighter.champion.attacking .body-figure .arm.right {
+  transform: rotate(42deg);
+}
+
+.fighter.player.attacking .body-figure .arm.right,
+.fighter.champion.attacking .body-figure .arm.left {
+  transform: rotate(-42deg);
+}
+
+.fighter.player.defending .body-figure .arm.left,
+.fighter.player.defending .body-figure .arm.right,
+.fighter.champion.defending .body-figure .arm.left,
+.fighter.champion.defending .body-figure .arm.right {
+  transform: rotate(24deg);
 }
 
 .battle-meter {
@@ -421,6 +666,16 @@ button:focus-visible {
   border-radius: 999px;
   background: rgba(248, 200, 75, 0.12);
   color: var(--gold-2);
+}
+
+.battle-hint {
+  margin-bottom: 12px;
+  color: var(--muted);
+}
+
+.battle-controls {
+  justify-content: center;
+  margin-top: 8px;
 }
 
 .summary-grid {
@@ -475,33 +730,92 @@ button:focus-visible {
   }
 }
 
+@keyframes directClash {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes playerImpact {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  40% {
+    transform: translateX(18px) rotate(-12deg);
+  }
+  70% {
+    transform: translateX(6px) rotate(-6deg);
+  }
+}
+
+@keyframes championImpact {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  40% {
+    transform: translateX(-18px) rotate(12deg);
+  }
+  70% {
+    transform: translateX(-6px) rotate(6deg);
+  }
+}
+
 @keyframes playerStrike {
   0%,
   100% {
-    transform: translateX(0);
+    transform: translateX(0) rotate(0deg);
+  }
+  20% {
+    transform: translateX(8px) rotate(-6deg);
   }
   50% {
-    transform: translateX(16px) rotate(-8deg);
+    transform: translateX(20px) rotate(-16deg);
+  }
+  80% {
+    transform: translateX(6px) rotate(-4deg);
   }
 }
 
 @keyframes championStrike {
   0%,
   100% {
-    transform: translateX(0);
+    transform: translateX(0) rotate(0deg);
+  }
+  20% {
+    transform: translateX(-8px) rotate(6deg);
   }
   50% {
-    transform: translateX(-16px) rotate(8deg);
+    transform: translateX(-20px) rotate(16deg);
+  }
+  80% {
+    transform: translateX(-6px) rotate(4deg);
   }
 }
 
 @keyframes shieldShake {
   0%,
   100% {
-    transform: translateY(0);
+    transform: translateY(0) rotate(0deg);
   }
-  50% {
-    transform: translateY(-6px);
+  30% {
+    transform: translateY(-8px) rotate(5deg);
+  }
+  60% {
+    transform: translateY(-12px) rotate(-5deg);
+  }
+  90% {
+    transform: translateY(-4px) rotate(2deg);
   }
 }
 
