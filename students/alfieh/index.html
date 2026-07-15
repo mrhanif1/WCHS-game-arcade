@@ -1033,7 +1033,6 @@
         if (reason === "boss") this.sound.playBossLaugh();
         this.particles.spawn(this.player.x + 16, this.player.y + 16, "#ff3b30", 70, 5);
         this.enemies = [];
-        this.enemies.push(new Enemy(this.player.x + 60, this.player.y + 10, "tung"));
         this.player.reset(80, 700);
         this.player.invulnerableTimer = 1.2;
         this.questionActive = false;
