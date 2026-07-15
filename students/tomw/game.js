@@ -27,6 +27,14 @@ const state = {
   bossMinionValue: 8,
   bossMinionCost: 220,
   bossUpgradeCost: 300,
+  bossDropperCount: 0,
+  bossDropperValue: 5000000,
+  bossDropperBuyPrice: 100000000,
+  bossDropperValuePrice: 25000000,
+  bossDropperUnits: [],
+  bossArenaActive: false,
+  bossArenaState: null,
+  bossArenaListeners: null,
   devUnlocked: false,
   rebirthCount: 0,
   rebirthCost: 25000,
@@ -67,6 +75,10 @@ const els = {
   minionUpgradePrice: document.getElementById('minionUpgradePrice'),
   bossUpgradePrice: document.getElementById('bossUpgradePrice'),
   bossValuePrice: document.getElementById('bossValuePrice'),
+  bossDropperBuyBtn: document.getElementById('bossDropperBuyBtn'),
+  bossDropperValueBtn: document.getElementById('bossDropperValueBtn'),
+  bossDropperBuyPrice: document.getElementById('bossDropperBuyPrice'),
+  bossDropperValuePrice: document.getElementById('bossDropperValuePrice'),
   passwordOverlay: document.getElementById('passwordOverlay'),
   passwordInput: document.getElementById('passwordInput'),
   passwordSubmit: document.getElementById('passwordSubmit'),
@@ -90,6 +102,10 @@ const els = {
   conveyor: document.getElementById('conveyor'),
   statusText: document.getElementById('statusText'),
   collectAmount: document.getElementById('collectAmount'),
+  merchantButton: document.getElementById('merchantButton'),
+  bossOverlay: document.getElementById('bossOverlay'),
+  bossCloseBtn: document.getElementById('bossCloseBtn'),
+  bossArena: document.getElementById('bossArena'),
 };
 
 function getRebirthMultiplier() {
@@ -161,6 +177,10 @@ function updateUI() {
   els.minionUpgradeBtn.disabled = state.money < state.minionUpgradeCost;
   els.bossUpgradeBtn.disabled = state.money < state.bossMinionCost;
   els.bossValueBtn.disabled = state.money < state.bossUpgradeCost;
+  if (els.bossDropperBuyPrice) els.bossDropperBuyPrice.textContent = `$${state.bossDropperBuyPrice.toLocaleString()}`;
+  if (els.bossDropperValuePrice) els.bossDropperValuePrice.textContent = `$${state.bossDropperValuePrice.toLocaleString()}`;
+  if (els.bossDropperBuyBtn) els.bossDropperBuyBtn.disabled = state.money < state.bossDropperBuyPrice;
+  if (els.bossDropperValueBtn) els.bossDropperValueBtn.disabled = state.money < state.bossDropperValuePrice || state.bossDropperCount === 0;
   updateConveyorLength();
   updateRebirthTheme();
   updateVaultVisuals();
@@ -496,6 +516,15 @@ function rebirth() {
   state.bossUpgradeCost = 300;
   state.vendorActive = false;
   state.vendorElement = null;
+  state.bossDropperCount = 0;
+  state.bossDropperValue = 5000000;
+  state.bossDropperBuyPrice = 100000000;
+  state.bossDropperValuePrice = 25000000;
+  state.bossDropperUnits.forEach((unit) => {
+    if (unit.interval) clearInterval(unit.interval);
+    if (unit.element) unit.element.remove();
+  });
+  state.bossDropperUnits = [];
   if (document.querySelector('.businessman-unit')) {
     document.querySelector('.businessman-unit').remove();
   }
@@ -699,6 +728,327 @@ function spawnBusinessman() {
   }, 8000);
 }
 
+function createBossDropperUnit() {
+  const dropper = document.createElement('div');
+  dropper.className = 'boss-dropper';
+  dropper.innerHTML = '<div class="boss-dropper-label">BOSS DROP</div>';
+  dropper.style.left = `${120 + state.bossDropperUnits.length * 116}px`;
+  dropper.style.top = '120px';
+  els.gameArea.appendChild(dropper);
+
+  const unit = { element: dropper, interval: null };
+  unit.interval = setInterval(() => {
+    spawnBossDropperBox(unit);
+  }, 10);
+  state.bossDropperUnits.push(unit);
+  return unit;
+}
+
+function spawnBossDropperBox(unit) {
+  if (!els.gameArea || !unit?.element) return;
+  const box = document.createElement('div');
+  box.className = 'boss-box';
+  const left = parseFloat(unit.element.style.left || '120') + 24;
+  const top = parseFloat(unit.element.style.top || '120') + 34;
+  box.style.left = `${left}px`;
+  box.style.top = `${top}px`;
+  els.gameArea.appendChild(box);
+
+  let y = top;
+  let x = left;
+  const fallTimer = setInterval(() => {
+    y += 10;
+    box.style.top = `${y}px`;
+    if (y >= 250) {
+      clearInterval(fallTimer);
+      const slideTimer = setInterval(() => {
+        x += 14;
+        box.style.left = `${x}px`;
+        box.style.top = '250px';
+        if (x > 1030) {
+          clearInterval(slideTimer);
+          box.remove();
+          state.money += state.bossDropperValue * getMoneyMultiplier();
+          showFloating(`+$${state.bossDropperValue.toLocaleString()}`, 960, 280, true);
+          updateUI();
+        }
+      }, 20);
+    }
+  }, 20);
+}
+
+function buyBossDropper() {
+  if (state.money < state.bossDropperBuyPrice) return;
+  state.money -= state.bossDropperBuyPrice;
+  state.bossDropperCount += 1;
+  state.bossDropperBuyPrice = Math.floor(state.bossDropperBuyPrice * 1.5);
+  createBossDropperUnit();
+  showFloating('BOSS DROP', 420, 110, true);
+  updateUI();
+}
+
+function upgradeBossDropperValue() {
+  if (state.money < state.bossDropperValuePrice || state.bossDropperCount === 0) return;
+  state.money -= state.bossDropperValuePrice;
+  state.bossDropperValue += 5000000;
+  state.bossDropperValuePrice = Math.floor(state.bossDropperValuePrice * 1.6);
+  showFloating('+VALUE', 520, 110, true);
+  updateUI();
+}
+
+function overlap(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function openBossArena() {
+  if (!els.bossOverlay || !els.bossArena) return;
+  els.bossOverlay.classList.remove('hidden');
+  els.bossArena.innerHTML = '';
+
+  const arenaWidth = els.bossArena.clientWidth || 920;
+  const arenaHeight = els.bossArena.clientHeight || 540;
+  const groundY = arenaHeight - 150;
+
+  const platform = document.createElement('div');
+  platform.className = 'boss-platform';
+  els.bossArena.appendChild(platform);
+
+  const beamLayer = document.createElement('div');
+  beamLayer.className = 'boss-beam-layer';
+  els.bossArena.appendChild(beamLayer);
+
+  const hud = document.createElement('div');
+  hud.className = 'boss-hud';
+  hud.innerHTML = `
+    <div class="boss-health">
+      <strong>Boss HP</strong>
+      <div class="boss-health-bar"><div class="boss-health-fill"></div></div>
+    </div>
+    <div class="boss-status">Dodge the beams, then slash the boss.</div>
+  `;
+  els.bossArena.appendChild(hud);
+
+  const playerEl = document.createElement('div');
+  playerEl.className = 'boss-player';
+  playerEl.innerHTML = '<span class="boss-player-sword"></span>';
+  els.bossArena.appendChild(playerEl);
+
+  const enemyEl = document.createElement('div');
+  enemyEl.className = 'boss-enemy';
+  enemyEl.innerHTML = '<span class="boss-enemy-eye boss-enemy-eye-left"></span><span class="boss-enemy-eye boss-enemy-eye-right"></span>';
+  els.bossArena.appendChild(enemyEl);
+
+  const stateObj = {
+    player: { x: 90, y: groundY, w: 54, h: 54, vx: 0, vy: 0, grounded: true, direction: 1, attackCooldown: 0, attackTimer: 0, hp: 100 },
+    enemy: { x: arenaWidth - 126 - 70, y: groundY, w: 126, h: 138, hp: 240, attackCooldown: 0, dashTimer: 0, dashDirection: 1, direction: -1 },
+    beams: [],
+    keys: { left: false, right: false, jump: false, attack: false },
+    playerEl,
+    enemyEl,
+    beamLayer,
+    hud,
+    healthFill: hud.querySelector('.boss-health-fill'),
+    statusText: hud.querySelector('.boss-status'),
+  };
+
+  state.bossArenaState = stateObj;
+  state.bossArenaActive = true;
+
+  const handleKeyDown = (event) => {
+    if (event.code === 'ArrowLeft' || event.code === 'KeyA') {
+      stateObj.keys.left = true;
+      event.preventDefault();
+    }
+    if (event.code === 'ArrowRight' || event.code === 'KeyD') {
+      stateObj.keys.right = true;
+      event.preventDefault();
+    }
+    if (event.code === 'ArrowUp' || event.code === 'KeyW' || event.code === 'Space') {
+      if (event.code === 'Space') {
+        stateObj.keys.attack = true;
+        event.preventDefault();
+      } else {
+        stateObj.keys.jump = true;
+      }
+    }
+  };
+
+  const handleKeyUp = (event) => {
+    if (event.code === 'ArrowLeft' || event.code === 'KeyA') stateObj.keys.left = false;
+    if (event.code === 'ArrowRight' || event.code === 'KeyD') stateObj.keys.right = false;
+    if (event.code === 'ArrowUp' || event.code === 'KeyW') stateObj.keys.jump = false;
+  };
+
+  document.addEventListener('keydown', handleKeyDown);
+  document.addEventListener('keyup', handleKeyUp);
+  state.bossArenaListeners = { handleKeyDown, handleKeyUp };
+
+  const loop = setInterval(() => updateBossArenaFrame(stateObj), 1000 / 60);
+  stateObj.loop = loop;
+}
+
+function updateBossArenaFrame(stateObj) {
+  const arena = els.bossArena;
+  if (!arena || !stateObj || !state.bossArenaActive) return;
+  const width = arena.clientWidth || 920;
+  const height = arena.clientHeight || 540;
+  const groundY = height - 150;
+  const player = stateObj.player;
+  const enemy = stateObj.enemy;
+
+  if (player.attackCooldown > 0) player.attackCooldown -= 1;
+  if (player.attackTimer > 0) {
+    player.attackTimer -= 1;
+    if (player.attackTimer <= 0) stateObj.playerEl.classList.remove('attacking');
+  }
+
+  if (stateObj.keys.left) {
+    player.vx = -4.6;
+    player.direction = -1;
+  } else if (stateObj.keys.right) {
+    player.vx = 4.6;
+    player.direction = 1;
+  } else {
+    player.vx *= 0.75;
+  }
+
+  player.x += player.vx;
+  player.x = Math.max(8, Math.min(width - player.w - 8, player.x));
+
+  if (stateObj.keys.jump && player.grounded) {
+    player.vy = 14;
+    player.grounded = false;
+    stateObj.keys.jump = false;
+  }
+
+  if (!player.grounded) {
+    player.vy -= 0.7;
+    player.y += player.vy;
+    if (player.y >= groundY) {
+      player.y = groundY;
+      player.vy = 0;
+      player.grounded = true;
+    }
+  } else {
+    player.y = groundY;
+  }
+
+  if (stateObj.keys.attack && player.attackCooldown <= 0) {
+    player.attackCooldown = 14;
+    player.attackTimer = 8;
+    stateObj.keys.attack = false;
+    stateObj.playerEl.classList.add('attacking');
+  }
+
+  const attackBox = {
+    x: player.direction === 1 ? player.x + player.w : player.x - 28,
+    y: player.y + 10,
+    w: 28,
+    h: 20,
+  };
+
+  if (player.attackTimer > 0 && overlap(attackBox, { x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h })) {
+    enemy.hp -= 24;
+    stateObj.statusText.textContent = 'Direct hit!';
+  }
+
+  stateObj.playerEl.style.left = `${player.x}px`;
+  stateObj.playerEl.style.bottom = `${height - player.y - player.h}px`;
+  stateObj.playerEl.style.transform = `scaleX(${player.direction})`;
+  stateObj.enemyEl.style.left = `${enemy.x}px`;
+  stateObj.enemyEl.style.bottom = `${height - enemy.y - enemy.h}px`;
+
+  if (enemy.hp <= 0) {
+    clearInterval(stateObj.loop);
+    stateObj.statusText.textContent = 'Boss defeated!';
+    setTimeout(() => {
+      closeBossArena();
+      state.bossDropperCount += 1;
+      state.bossDropperBuyPrice = Math.max(100000000, Math.floor(state.bossDropperBuyPrice * 1.2));
+      createBossDropperUnit();
+      showFloating('NEW DROP', 420, 120, true);
+      updateUI();
+    }, 200);
+    return;
+  }
+
+  enemy.attackCooldown = Math.max(0, enemy.attackCooldown - 1);
+  if (enemy.dashTimer > 0) {
+    enemy.dashTimer -= 1;
+    enemy.x += enemy.dashDirection * 18;
+    enemy.x = Math.max(20, Math.min(width - enemy.w - 20, enemy.x));
+    if (enemy.dashTimer <= 0) {
+      enemy.attackCooldown = 60;
+    }
+  } else if (enemy.attackCooldown <= 0) {
+    if (Math.random() < 0.45) {
+      enemy.dashTimer = 16;
+      enemy.dashDirection = player.x > enemy.x ? 1 : -1;
+      enemy.attackCooldown = 70;
+    } else {
+      enemy.attackCooldown = 72;
+      const beam = {
+        x: enemy.x + 38,
+        y: enemy.y + 70,
+        w: 220,
+        h: 10,
+        speed: player.x < enemy.x ? -18 : 18,
+        element: null,
+      };
+      beam.element = document.createElement('div');
+      beam.element.className = 'boss-beam';
+      beam.element.style.left = `${beam.x}px`;
+      beam.element.style.top = `${beam.y}px`;
+      beam.element.style.width = `${beam.w}px`;
+      stateObj.beamLayer.appendChild(beam.element);
+      stateObj.beams.push(beam);
+    }
+  }
+
+  stateObj.beams = stateObj.beams.filter((beam) => {
+    if (!beam.element) return false;
+    beam.x += beam.speed;
+    beam.element.style.left = `${beam.x}px`;
+    beam.element.style.top = `${beam.y}px`;
+    if (beam.x < -240 || beam.x > width + 240) {
+      beam.element.remove();
+      return false;
+    }
+    if (overlap({ x: player.x, y: player.y + 6, w: player.w, h: player.h - 6 }, { x: beam.x, y: beam.y, w: beam.w, h: beam.h })) {
+      clearInterval(stateObj.loop);
+      beam.element.remove();
+      stateObj.statusText.textContent = 'You were hit by the beam.';
+      setTimeout(() => closeBossArena(), 450);
+      return false;
+    }
+    return true;
+  });
+
+  if (enemy.dashTimer > 0 && overlap({ x: player.x, y: player.y + 2, w: player.w, h: player.h - 2 }, { x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h })) {
+    clearInterval(stateObj.loop);
+    stateObj.statusText.textContent = 'The dash caught you.';
+    setTimeout(() => closeBossArena(), 450);
+    return;
+  }
+
+  const fillWidth = Math.max(0, (enemy.hp / 240) * 100);
+  if (stateObj.healthFill) stateObj.healthFill.style.width = `${fillWidth}%`;
+  stateObj.statusText.textContent = enemy.hp <= 180 ? 'The boss is staggering!' : 'Dodge the beams, then slash the boss.';
+}
+
+function closeBossArena() {
+  if (!els.bossOverlay) return;
+  els.bossOverlay.classList.add('hidden');
+  if (state.bossArenaState?.loop) clearInterval(state.bossArenaState.loop);
+  if (state.bossArenaListeners) {
+    document.removeEventListener('keydown', state.bossArenaListeners.handleKeyDown);
+    document.removeEventListener('keyup', state.bossArenaListeners.handleKeyUp);
+  }
+  state.bossArenaActive = false;
+  state.bossArenaState = null;
+  state.bossArenaListeners = null;
+}
+
 function initGame() {
   renderDroppers();
   createManualDropper();
@@ -710,6 +1060,12 @@ function initGame() {
   els.devBtn.addEventListener('click', openDeveloperMenu);
   els.passwordSubmit.addEventListener('click', unlockDeveloperMenu);
   els.passwordCancel.addEventListener('click', closePasswordOverlay);
+  if (els.merchantButton) {
+    els.merchantButton.addEventListener('click', openBossArena);
+  }
+  if (els.bossCloseBtn) {
+    els.bossCloseBtn.addEventListener('click', closeBossArena);
+  }
   els.addMoneyBtn.addEventListener('click', addDeveloperMoney);
   els.removeMoneyBtn.addEventListener('click', removeDeveloperMoney);
   els.addBlackMarketBtn.addEventListener('click', addBlackMarketDropper);
@@ -735,4 +1091,6 @@ window.upgradeClicker = upgradeClicker;
 window.upgradeMinion = upgradeMinion;
 window.hireBossMinion = hireBossMinion;
 window.upgradeBossMinions = upgradeBossMinions;
+window.buyBossDropper = buyBossDropper;
+window.upgradeBossDropperValue = upgradeBossDropperValue;
 window.rebirth = rebirth;

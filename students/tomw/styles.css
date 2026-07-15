@@ -696,6 +696,26 @@ body {
   font-weight: 600;
 }
 
+.merchant-button {
+  position: absolute;
+  right: 24px;
+  bottom: 90px;
+  z-index: 30;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: white;
+  background: linear-gradient(135deg, #7f3fd9 0%, #3f1c7f 100%);
+  box-shadow: 0 14px 30px rgba(79, 37, 144, 0.22);
+  cursor: pointer;
+}
+
+.merchant-button:hover {
+  transform: translateY(-1px);
+}
+
 #minigamePanel {
   position: absolute;
   left: 20px;
@@ -921,6 +941,289 @@ body {
   box-shadow: 0 20px 60px rgba(0,0,0,0.16);
   text-align: center;
   border: 1px solid rgba(0,0,0,0.06);
+}
+
+.boss-overlay-card {
+  width: min(96vw, 1140px);
+  height: min(90vh, 780px);
+  padding: 20px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(12, 16, 28, 0.98) 0%, rgba(30, 38, 58, 0.96) 100%);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.24);
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.boss-overlay-header {
+  text-align: center;
+  color: white;
+}
+
+.boss-overlay-header h2 {
+  margin: 0 0 4px;
+  font-size: 1.4rem;
+}
+
+.boss-overlay-header p {
+  margin: 0;
+  color: rgba(255,255,255,0.78);
+}
+
+.boss-arena {
+  flex: 1;
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, #4aa1ff 0%, #8bd7ff 36%, #d7f8ff 100%);
+  border: 2px solid rgba(255,255,255,0.16);
+}
+
+.boss-platform {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 140px;
+  background: linear-gradient(180deg, #7d5a3b 0%, #4f3422 100%);
+  box-shadow: inset 0 10px 14px rgba(255,255,255,0.16);
+}
+
+.boss-platform::before,
+.boss-platform::after {
+  content: "";
+  position: absolute;
+  top: -52px;
+  width: 120px;
+  height: 90px;
+  background: linear-gradient(180deg, #f8f2e1 0%, #c9b88c 100%);
+  clip-path: polygon(0 100%, 20% 60%, 40% 100%, 60% 40%, 80% 100%, 100% 60%, 100% 100%);
+}
+
+.boss-platform::before { left: 80px; }
+.boss-platform::after { right: 80px; }
+
+.boss-player,
+.boss-enemy {
+  position: absolute;
+  display: block;
+  border-radius: 16px;
+  z-index: 5;
+}
+
+.boss-player {
+  width: 54px;
+  height: 54px;
+  bottom: 130px;
+  left: 90px;
+  background: linear-gradient(145deg, #5bc9ff 0%, #0d67a0 100%);
+  border: 3px solid #06253b;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+}
+
+.boss-player::before,
+.boss-player::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: inset 0 -2px 2px rgba(0,0,0,0.2);
+}
+
+.boss-player::before { left: 12px; }
+.boss-player::after { right: 12px; }
+
+.boss-player-sword {
+  position: absolute;
+  top: 10px;
+  left: 54px;
+  width: 24px;
+  height: 10px;
+  background: linear-gradient(145deg, #f7f7f7, #999);
+  border-radius: 999px;
+  opacity: 0;
+  transform-origin: center;
+}
+
+.boss-player.attacking .boss-player-sword {
+  opacity: 1;
+  animation: swing 0.16s ease-out;
+}
+
+.boss-enemy {
+  width: 126px;
+  height: 138px;
+  bottom: 132px;
+  right: 120px;
+  background: linear-gradient(145deg, #ffb5c9 0%, #b62d71 100%);
+  border: 3px solid #4b0d2d;
+  border-radius: 24px 24px 30px 30px;
+  box-shadow: 0 14px 28px rgba(0,0,0,0.22);
+}
+
+.boss-enemy::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 20px;
+  transform: translateX(-50%);
+  width: 54px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid #4b0d2d;
+  background: linear-gradient(145deg, #fff0f5, #f7a8c5);
+}
+
+.boss-enemy::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: 62px;
+  height: 28px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #4b0d2d, #220813);
+}
+
+.boss-enemy-eye,
+.boss-enemy-eye-left,
+.boss-enemy-eye-right {
+  position: absolute;
+  top: 36px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #1d0c14;
+}
+
+.boss-enemy-eye-left { left: 42px; }
+.boss-enemy-eye-right { right: 42px; }
+
+.boss-beam-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.boss-beam {
+  position: absolute;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffec5a 0%, #ff4d4d 100%);
+  box-shadow: 0 0 18px rgba(255, 77, 77, 0.55);
+}
+
+.boss-hud {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(0,0,0,0.38);
+  color: white;
+  backdrop-filter: blur(8px);
+  z-index: 6;
+}
+
+.boss-health {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+}
+
+.boss-health-bar {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.16);
+}
+
+.boss-health-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #7bff8c 0%, #2cbf4a 100%);
+}
+
+.boss-status {
+  font-weight: 700;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.boss-dropper {
+  position: absolute;
+  width: 84px;
+  height: 132px;
+  top: 90px;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #2f1d40 0%, #0d0715 100%);
+  border: 3px solid rgba(255,255,255,0.18);
+  box-shadow: 0 16px 32px rgba(0,0,0,0.22);
+  z-index: 7;
+}
+
+.boss-dropper::before {
+  content: "";
+  position: absolute;
+  inset: 12px 12px auto;
+  height: 28px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #ffdd7a, #b16d00);
+}
+
+.boss-dropper::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #442d5c, #1e0c2d);
+}
+
+.boss-dropper-label {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #111;
+  background: rgba(255,255,255,0.92);
+  padding: 4px 8px;
+  border-radius: 999px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.14);
+}
+
+.boss-box {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: linear-gradient(145deg, #ffef94, #f0b100);
+  border: 2px solid #8b5a00;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.16);
+  z-index: 6;
+}
+
+@keyframes swing {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-24deg); }
 }
 
 .overlay-card h2 {

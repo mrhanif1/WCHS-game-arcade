@@ -31,6 +31,7 @@
     --r-rare:#5b8dee;
     --r-epic:#a855f7;
     --r-legendary:#d9a441;
+    --trial:#ffb84d;
   }
   *{box-sizing:border-box}
   body{
@@ -95,11 +96,22 @@
   .row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
   .statline{font-size:.95rem;color:var(--dim)}
   .statline b{color:var(--cream)}
+  .badge-group{display:flex;gap:8px;flex-wrap:wrap}
   .gold-badge{
     display:inline-flex;align-items:center;gap:6px;
     background:rgba(217,164,65,.12);
     border:1px solid var(--gold-dim);
     color:var(--gold);
+    padding:4px 12px;
+    border-radius:999px;
+    font-weight:600;
+    font-size:.9rem;
+  }
+  .trial-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,184,77,.12);
+    border:1px solid var(--trial);
+    color:var(--trial);
     padding:4px 12px;
     border-radius:999px;
     font-weight:600;
@@ -322,6 +334,7 @@
   #log b.dodge-text{color:var(--stat)}
   #log b.bonus-text{color:var(--bonus)}
   #log b.reset-text{color:var(--danger)}
+  #log b.trial-text{color:var(--trial)}
   #log b.drop-common{color:var(--r-common)}
   #log b.drop-uncommon{color:var(--r-uncommon)}
   #log b.drop-rare{color:var(--r-rare)}
@@ -362,6 +375,43 @@
   .flash{animation:flash .4s ease}
   @keyframes flash{0%{filter:brightness(1.6)}100%{filter:brightness(1)}}
 
+  #choicePopup{
+    display:none;
+    margin-top:16px;
+    background:#2a1c0f;
+    border:1px solid var(--trial);
+    border-radius:12px;
+    padding:18px;
+    text-align:center;
+    box-shadow:0 0 22px rgba(255,184,77,.3);
+    animation:bannerIn .4s ease;
+  }
+  #choicePopup h3{
+    font-family:'Cinzel',serif;
+    color:var(--trial);
+    margin:0 0 4px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  #choicePopup .cp-sub{font-size:.8rem;color:var(--dim);margin:0 0 14px}
+  .choice-list{display:flex;flex-direction:column;gap:10px}
+  .choice-option{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    background:#1c1433;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    text-align:left;
+  }
+  .choice-option:hover:not(:disabled){border-color:var(--trial);background:#241a26;transform:translateY(-1px)}
+  .choice-option .co-info{flex:1}
+  .choice-option .co-name{font-weight:700;color:var(--cream);font-size:.92rem}
+  .choice-option .co-desc{font-size:.75rem;color:var(--dim);margin-top:2px}
+  .choice-option .co-pick{
+    background:var(--trial);color:#241a00;font-weight:700;font-size:.78rem;
+    padding:7px 12px;border:none;border-radius:8px;
+  }
+
   #bossBanner{
     display:none;
     text-align:center;
@@ -391,7 +441,10 @@
 
   <div class="row">
     <span class="statline">Level <b id="lvl"></b> &nbsp;|&nbsp; XP <b id="xp"></b>/<b id="need"></b></span>
-    <span class="gold-badge">&#9830; <span id="gold"></span> gold</span>
+    <div class="badge-group">
+      <span class="trial-badge">&#127891; <span id="trialPoints"></span>/3</span>
+      <span class="gold-badge">&#9830; <span id="gold"></span> gold</span>
+    </div>
   </div>
   <div class="bar"><div id="xpfill" class="fill xp"></div></div>
 
@@ -454,16 +507,22 @@
 
   <div id="bonusQuiz">
     <h3>&#127775; Wave Trial</h3>
-    <p class="bq-sub">Answer correctly for a free upgrade!</p>
+    <p class="bq-sub">Answer correctly to earn a trial point!</p>
     <p id="bq"></p>
     <div id="bqAns"></div>
   </div>
 
   <div id="quiz">
     <h3>Answer to continue</h3>
-    <p class="quiz-sub">Get it right and you'll find a free upgrade before the next fight.</p>
+    <p class="quiz-sub">Get it right to earn a trial point toward a free upgrade choice.</p>
     <p id="q"></p>
     <div id="ans"></div>
+  </div>
+
+  <div id="choicePopup">
+    <h3>&#127775; Trial Reward</h3>
+    <p class="cp-sub">3 trial points earned! Choose one free upgrade:</p>
+    <div class="choice-list" id="choiceList"></div>
   </div>
 </div>
 
@@ -482,7 +541,8 @@ const QUIZ_POOL=[
 ];
 
 const BOSS_EVERY = 10;   // a boss shows up after every 10 wave-clears
-const BONUS_EVERY = 5;   // every 5 wave-clears, answer a question for a free upgrade
+const BONUS_EVERY = 2;   // every 2 wave-clears, answer a question to earn a trial point
+const TRIAL_POINTS_NEEDED = 3; // points needed before a free-upgrade choice pops up
 const BOSS_NAMES = [
   'Grimwald the Ashen',
   'Vex, Herald of Ruin',
@@ -600,7 +660,8 @@ let HP = (s.HP !== undefined ? s.HP : M);
 let defeats = s.defeats || 0;
 let cool = 0;
 let windCharges = 0;
-let quizActive = false; // true whenever a quiz/bonus-quiz box is on screen
+let quizActive = false; // true whenever a quiz/bonus-quiz/choice popup is on screen
+let trialPoints = s.trialPoints || 0;
 
 // equipment state: inventory is a list of {uid, id, level}; equipped maps slot -> uid or null
 let inventory = (s.inventory || []).map(i => ({ uid:i.uid, id:i.id, level: i.level || 1 }));
@@ -717,7 +778,7 @@ const SHOP_ITEMS = [
 function costOf(item){ return item.baseCost + up[item.key]*item.step; }
 function powerCooldown(){ return Math.max(0, 2 - up.cool); }
 
-/* ---------- equipment bonus aggregation (now level-scaled) ---------- */
+/* ---------- equipment bonus aggregation (level-scaled) ---------- */
 function equipTotals(){
   const t = {atk:0,hp:0,heal:0,crit:0,armor:0,luck:0,critMult:0,dodge:0};
   ['weapon','armor','trinket'].forEach(slot=>{
@@ -744,7 +805,7 @@ function wisHealBonus(){ const e=equipTotals(); return stats.wis * 5 + e.heal; }
 function maxHP(){ const e=equipTotals(); return M + e.hp; }
 
 function save(){
-  localStorage.setItem('mbsave', JSON.stringify({L,XP,N,M,gold,up,stats,HP,defeats,inventory,equipped,uidCounter}));
+  localStorage.setItem('mbsave', JSON.stringify({L,XP,N,M,gold,up,stats,HP,defeats,inventory,equipped,uidCounter,trialPoints}));
 }
 
 /* ---------- UI ---------- */
@@ -754,6 +815,7 @@ function ui(){
   mhp.textContent=MHP; php.textContent=HP;
   elv.textContent=eL; emhp.textContent=eM; ehp.textContent=eHP;
   document.getElementById('gold').textContent = gold;
+  document.getElementById('trialPoints').textContent = trialPoints;
   document.getElementById('enemyName').textContent = eName;
 
   pfill.style.width = (HP/MHP*100)+'%';
@@ -784,7 +846,7 @@ function ui(){
     ? `cooling down (${cool})`
     : `${35+L*3+up.atk*4+strBonus()} dmg, ${powerCooldown()} turn CD`;
 
-  // lock out all combat actions while a quiz is on screen
+  // lock out all combat actions while a quiz/choice popup is on screen
   document.getElementById('btnScratch').disabled = quizActive;
   document.getElementById('btnFire').disabled = quizActive;
   document.getElementById('btnHeal').disabled = quizActive;
@@ -994,7 +1056,7 @@ function equipItem(uid){
   const def = itemById(inst.id);
   const wasFull = HP >= maxHP();
   equipped[def.slot] = uid;
-  if(wasFull) HP = maxHP(); // keep full-HP characters topped off if max HP just rose
+  if(wasFull) HP = maxHP();
   log(`Equipped <b>${def.name}</b>.`, true);
   ui();
 }
@@ -1066,9 +1128,11 @@ function resetGame(){
   cool = 0;
   windCharges = 0;
   quizActive = false;
+  trialPoints = 0;
 
   document.getElementById('quiz').style.display = 'none';
   document.getElementById('bonusQuiz').style.display = 'none';
+  document.getElementById('choicePopup').style.display = 'none';
 
   eName = ENEMY_NAMES[Math.floor(Math.random()*ENEMY_NAMES.length)];
   isBoss = false;
@@ -1155,7 +1219,7 @@ function enemy(){
 function rollCrit(){ return Math.random() < critChance(); }
 
 function move(m){
-  if(quizActive) return; // can't act while a quiz is on screen
+  if(quizActive) return; // can't act while a quiz/choice popup is on screen
 
   let d = 0, crit = false;
 
@@ -1225,7 +1289,17 @@ function afterVictory(){
   }
 }
 
-/* ---------- lose-quiz (now grants a free upgrade on a correct answer) ---------- */
+/* ---------- trial point system ---------- */
+function earnTrialPoint(){
+  trialPoints++;
+  if(trialPoints >= TRIAL_POINTS_NEEDED){
+    trialPoints -= TRIAL_POINTS_NEEDED;
+    return true; // threshold reached, caller should show the choice popup
+  }
+  return false;
+}
+
+/* ---------- lose-quiz (correct answer earns a trial point) ---------- */
 function quizGate(){
   quizActive = true;
   const box=document.getElementById('quiz');
@@ -1245,13 +1319,16 @@ function quizGate(){
     b.onclick=()=>{
       if(i===x.c){
         ans.querySelectorAll('button').forEach(btn=>btn.disabled=true);
-        awardFreeUpgrade();
-        log('<b class="bonus-text">Correct!</b> You catch your breath and find a spare upgrade before the next fight.', true);
-        setTimeout(()=>{
-          box.style.display='none';
+        const reachedGoal = earnTrialPoint();
+        log(`<b class="trial-text">Correct!</b> Trial point earned (${trialPoints}/${TRIAL_POINTS_NEEDED}).`, true);
+        box.style.display='none';
+        ui();
+        if(reachedGoal){
+          setTimeout(()=> showUpgradeChoice(newEnemy), 500);
+        } else {
           quizActive = false;
-          newEnemy();
-        }, 900);
+          setTimeout(newEnemy, 600);
+        }
       } else {
         alert('Try again');
       }
@@ -1261,7 +1338,7 @@ function quizGate(){
   ui();
 }
 
-/* ---------- bonus wave-trial quiz (every BONUS_EVERY wins, free upgrade on correct) ---------- */
+/* ---------- bonus wave-trial quiz (every BONUS_EVERY wins, correct answer earns a point) ---------- */
 function bonusQuizGate(){
   quizActive = true;
   const box=document.getElementById('bonusQuiz');
@@ -1280,36 +1357,78 @@ function bonusQuizGate(){
     b.textContent=x.a[i];
     b.onclick=()=>{
       ans.querySelectorAll('button').forEach(btn=>btn.disabled=true);
+      let reachedGoal = false;
       if(i===x.c){
-        awardFreeUpgrade();
+        reachedGoal = earnTrialPoint();
+        log(`<b class="trial-text">Correct!</b> Trial point earned (${trialPoints}/${TRIAL_POINTS_NEEDED}).`, true);
       } else {
-        log('You missed the Wave Trial question — no upgrade this time.', true);
+        log('You missed the Wave Trial question — no trial point this time.', true);
       }
-      setTimeout(()=>{
-        box.style.display='none';
+      box.style.display='none';
+      ui();
+      if(reachedGoal){
+        setTimeout(()=> showUpgradeChoice(newEnemy), 500);
+      } else {
         quizActive = false;
-        newEnemy();
-      }, 900);
+        setTimeout(newEnemy, 600);
+      }
     };
     ans.appendChild(b);
   });
   ui();
 }
 
-function awardFreeUpgrade(){
-  // prefer a random non-maxed shop item; fall back to a random stat
-  const candidates = SHOP_ITEMS.filter(i => up[i.key] < i.max);
-  if(candidates.length > 0){
-    const item = candidates[Math.floor(Math.random()*candidates.length)];
-    up[item.key] += 1;
-    item.apply();
-    log(`<b class="bonus-text">Free upgrade: ${item.icon} ${item.name}</b>`, true);
-  } else {
-    const key = Object.keys(stats)[Math.floor(Math.random()*Object.keys(stats).length)];
-    grantFreeStat(key);
-    const name = STAT_ITEMS.find(x=>x.key===key).name;
-    log(`<b class="bonus-text">Free stat point: ${name}</b>`, true);
+/* ---------- upgrade choice popup (shown once 3 trial points are earned) ---------- */
+function buildUpgradeCandidates(n){
+  const pool = [];
+  SHOP_ITEMS.filter(i => up[i.key] < i.max).forEach(i => pool.push({ type:'shop', item:i }));
+  STAT_ITEMS.forEach(i => pool.push({ type:'stat', item:i }));
+
+  // shuffle
+  for(let i=pool.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [pool[i],pool[j]]=[pool[j],pool[i]];
   }
+  return pool.slice(0, Math.min(n, pool.length));
+}
+
+function showUpgradeChoice(onDone){
+  quizActive = true;
+  const box = document.getElementById('choicePopup');
+  const list = document.getElementById('choiceList');
+  list.innerHTML = '';
+  const candidates = buildUpgradeCandidates(3);
+
+  candidates.forEach(c => {
+    const opt = document.createElement('button');
+    opt.className = 'choice-option';
+    const name = c.type === 'shop' ? `${c.item.icon} ${c.item.name}` : `${c.item.icon} ${c.item.name}`;
+    const desc = c.item.desc;
+    opt.innerHTML = `
+      <div class="co-info">
+        <div class="co-name">${name}</div>
+        <div class="co-desc">${desc}</div>
+      </div>
+      <span class="co-pick">Choose</span>
+    `;
+    opt.onclick = () => {
+      if(c.type === 'shop'){
+        up[c.item.key] += 1;
+        c.item.apply();
+        log(`<b class="trial-text">Trial reward claimed:</b> ${c.item.icon} ${c.item.name}`, true);
+      } else {
+        grantFreeStat(c.item.key);
+        log(`<b class="trial-text">Trial reward claimed:</b> ${c.item.icon} ${c.item.name} stat point`, true);
+      }
+      box.style.display = 'none';
+      quizActive = false;
+      ui();
+      if(onDone) setTimeout(onDone, 500);
+    };
+    list.appendChild(opt);
+  });
+
+  box.style.display = 'block';
   ui();
 }
 
