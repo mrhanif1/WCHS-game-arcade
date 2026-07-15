@@ -54,7 +54,7 @@
           <div class="panel">
             <h2>Welcome, Gladiator</h2>
             <p class="screen-text">
-              Train through eight GCSE Boolean Logic trials, earn equipment, and challenge the Arena Champion.
+              Train through five GCSE Boolean Logic and System Architecture trials, earn equipment, and challenge the Arena Champion.
             </p>
             <div class="button-row">
               <button id="play-btn" class="primary-btn">Play</button>
@@ -84,7 +84,7 @@
           <div class="panel story-panel">
             <h2>The Arena Awakens</h2>
             <p class="screen-text">
-              You step into the dusty coliseum as the crowd roars. Eight trials stand between you and glory.
+              You step into the dusty coliseum as the crowd roars. Five trials stand between you and glory.
               Each challenge sharpens your logic and strengthens your weapons.
             </p>
             <button id="start-trials-btn" class="primary-btn">Begin Training</button>
@@ -115,9 +115,19 @@
           <div class="panel battle-panel">
             <h2>The Final Battle</h2>
             <p id="battle-status" class="screen-text">The arena gates open...</p>
-            <div class="battle-stage">
+            <div class="battle-stage" id="battle-stage">
               <div class="fighter-card">
-                <div class="fighter player" id="player-fighter"></div>
+                <div class="fighter player" id="player-fighter">
+                  <div class="body-figure">
+                    <div class="face"></div>
+                    <div class="armor"></div>
+                    <div class="arm left"></div>
+                    <div class="arm right"></div>
+                    <div class="leg left"></div>
+                    <div class="leg right"></div>
+                  </div>
+                  <div class="gear-badge" id="player-gear-badge">No gear yet</div>
+                </div>
                 <p class="fighter-name">You</p>
               </div>
               <div class="battle-centre">
@@ -125,7 +135,17 @@
                 <div id="battle-effect" class="battle-effect"></div>
               </div>
               <div class="fighter-card">
-                <div class="fighter champion" id="champion-fighter"></div>
+                <div class="fighter champion" id="champion-fighter">
+                  <div class="body-figure">
+                    <div class="face"></div>
+                    <div class="armor"></div>
+                    <div class="arm left"></div>
+                    <div class="arm right"></div>
+                    <div class="leg left"></div>
+                    <div class="leg right"></div>
+                  </div>
+                  <div class="gear-badge" id="champion-gear-badge">Champion Armour</div>
+                </div>
                 <p class="fighter-name">Arena Champion</p>
               </div>
             </div>
@@ -133,7 +153,11 @@
               <span>Battle Power</span>
               <strong id="battle-meter-value">0</strong>
             </div>
-            <button id="battle-btn" class="primary-btn">Fight!</button>
+            <p class="battle-hint">Choose your move to fight the champion.</p>
+            <div class="button-row battle-controls">
+              <button id="attack-btn" class="primary-btn">Attack</button>
+              <button id="defend-btn" class="secondary-btn">Defend</button>
+            </div>
           </div>
         </section>
 
