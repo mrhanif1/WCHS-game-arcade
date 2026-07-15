@@ -71,8 +71,11 @@
             <button id="minionUpgradeBtn" class="mini-action-btn" type="button" onclick="upgradeMinion()">Upgrade Minion <span id="minionUpgradePrice">$60</span></button>
             <button id="bossUpgradeBtn" class="mini-action-btn" type="button" onclick="hireBossMinion()">Hire Boss Minion <span id="bossUpgradePrice">$220</span></button>
             <button id="bossValueBtn" class="mini-action-btn" type="button" onclick="upgradeBossMinions()">Upgrade Bosses <span id="bossValuePrice">$300</span></button>
+            <button id="bossDropperBuyBtn" class="mini-action-btn boss-dropper-btn" type="button" onclick="buyBossDropper()">Boss Dropper <span id="bossDropperBuyPrice">$100,000,000</span></button>
+            <button id="bossDropperValueBtn" class="mini-action-btn boss-dropper-btn" type="button" onclick="upgradeBossDropperValue()">Boss Value <span id="bossDropperValuePrice">$25,000,000</span></button>
           </div>
         </div>
+        <button id="merchantButton" class="merchant-button" type="button">🧑‍🔧 Merchant</button>
       </div>
 
       <div class="status-bar" id="statusText">Running • 1 dropper • 1.0x speed • $1/sec</div>
@@ -117,6 +120,19 @@
       <div id="quizOptions" class="quiz-options"></div>
       <div class="overlay-actions">
         <button id="quizSkip" class="secondary-btn" type="button">Skip</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bossOverlay" class="overlay hidden">
+    <div class="boss-overlay-card">
+      <div class="boss-overlay-header">
+        <h2>Merchant Arena</h2>
+        <p>Defend the platform, dodge the beams, and slash the anime boss until he falls.</p>
+      </div>
+      <div id="bossArena" class="boss-arena"></div>
+      <div class="overlay-actions">
+        <button id="bossCloseBtn" class="secondary-btn" type="button">Exit</button>
       </div>
     </div>
   </div>
