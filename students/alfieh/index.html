@@ -969,9 +969,10 @@
 
       completeLevel() {
         if (this.currentLevel < this.levels.length - 1) {
-          this.currentLevel += 1;
-          this.loadLevel(this.currentLevel);
-          this.saveProgress();
+          // Ask a question before moving to the next level
+          this.activeQuestion = { ...this.questionManager.getNextQuestion(), isPostLevel: true };
+          this.questionActive = true;
+          this.state = "question";
         } else {
           this.unlockedBat = true;
           this.state = "won";
@@ -1012,11 +1013,23 @@
       answerQuestion(index) {
         if (!this.activeQuestion) return;
         if (index === this.activeQuestion.correct) {
-          this.activeQuestion.checkpoint.collected = true;
-          this.sound.playCheckpoint();
-          this.questionActive = false;
-          this.activeQuestion = null;
-          this.state = "playing";
+          if (this.activeQuestion.isPostLevel) {
+            // Correct answer after level completion, proceed to next level
+            this.currentLevel += 1;
+            this.loadLevel(this.currentLevel);
+            this.sound.playCheckpoint();
+            this.questionActive = false;
+            this.activeQuestion = null;
+            this.state = "playing";
+            this.saveProgress();
+          } else {
+            // Checkpoint question (legacy support)
+            this.activeQuestion.checkpoint.collected = true;
+            this.sound.playCheckpoint();
+            this.questionActive = false;
+            this.activeQuestion = null;
+            this.state = "playing";
+          }
         } else {
           this.killPlayer("wrong-answer");
           this.questionActive = false;
@@ -1081,13 +1094,7 @@
           }
         });
 
-        this.level.checkpoints.forEach(cp => {
-          if (!cp.collected) {
-            if (rectsOverlap(this.player.x, this.player.y, this.player.w, this.player.h, cp.x, cp.y, 28, 28)) {
-              this.askQuestion(cp);
-            }
-          }
-        });
+
 
         this.enemies.forEach(enemy => enemy.update(dt, this));
 
