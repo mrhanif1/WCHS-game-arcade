@@ -256,7 +256,7 @@
     border:1px solid var(--r-rare);
     border-radius:12px;
     padding:16px;
-    max-height:460px;
+    max-height:500px;
     overflow-y:auto;
   }
   .slot-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
@@ -269,7 +269,8 @@
   }
   .slot-box.filled{border-style:solid}
   .slot-label{font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
-  .slot-item-name{font-weight:700;font-size:.82rem;margin-bottom:6px;min-height:2.2em;display:flex;align-items:center;justify-content:center}
+  .slot-item-name{font-weight:700;font-size:.82rem;margin-bottom:6px;min-height:2.2em;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px}
+  .slot-item-lvl{font-size:.68rem;color:var(--stat);font-weight:600}
   .unequip-btn{
     width:100%;
     background:#2a1c46;
@@ -293,11 +294,16 @@
   .inv-item .info{flex:1}
   .inv-item .name{font-weight:700;font-size:.88rem}
   .inv-item .rarity-tag{font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-left:6px}
+  .inv-item .lvl-tag{font-size:.68rem;color:var(--stat);font-weight:700;margin-left:6px}
   .inv-item .desc{font-size:.75rem;color:var(--dim);margin-top:2px}
   .inv-item .slot-tag{font-size:.68rem;color:var(--dim);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
-  .equip-btn{background:var(--bonus);color:#062018;border:none;min-width:80px;font-weight:700;font-size:.8rem}
+  .inv-actions{display:flex;flex-direction:column;gap:6px;min-width:96px}
+  .equip-btn{background:var(--bonus);color:#062018;border:none;font-weight:700;font-size:.78rem;padding:8px 10px}
   .equip-btn:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
   .equip-btn.equipped{background:var(--dim);color:#1a0e08}
+  .levelup-btn{background:var(--stat);color:#fff;border:none;font-weight:700;font-size:.72rem;padding:7px 10px}
+  .levelup-btn:hover:not(:disabled){filter:brightness(1.15);transform:translateY(-1px)}
+  .levelup-btn.maxed{background:var(--gold);color:#231604}
 
   #log{
     margin-top:16px;
@@ -331,6 +337,7 @@
     text-align:center;
   }
   #quiz h3{font-family:'Cinzel',serif;color:var(--ember);margin:0 0 8px}
+  #quiz .quiz-sub{font-size:.78rem;color:var(--dim);margin:0 0 10px}
   #ans button{margin:4px}
 
   #bonusQuiz{
@@ -454,6 +461,7 @@
 
   <div id="quiz">
     <h3>Answer to continue</h3>
+    <p class="quiz-sub">Get it right and you'll find a free upgrade before the next fight.</p>
     <p id="q"></p>
     <div id="ans"></div>
   </div>
@@ -489,48 +497,85 @@ const ENEMY_NAMES = ['Snarling Whelp','Marsh Stalker','Cave Skitterling','Rot Ho
 /* ---------- equipment definitions ---------- */
 const RARITY_ORDER = ['common','uncommon','rare','epic','legendary'];
 const RARITY_LABEL = {common:'Common',uncommon:'Uncommon',rare:'Rare',epic:'Epic',legendary:'Legendary'};
+const RARITY_BASE_COST = {common:12, uncommon:20, rare:35, epic:55, legendary:90};
+const GEAR_MAX_LEVEL = 10;
 
 const EQUIPMENT_POOL = [
-  // ---- Weapons (bonus: atk, crit, critMult) ----
+  // ---- Weapons (bonus: atk, crit, critMult, dodge) ----
   {id:'w_dagger', name:'Rusty Dagger', icon:'&#128481;', slot:'weapon', rarity:'common',
     bonuses:{atk:2}, desc:'+2 damage on every attack.'},
+  {id:'w_club', name:'Wooden Club', icon:'&#129691;', slot:'weapon', rarity:'common',
+    bonuses:{atk:1,crit:0.01}, desc:'+1 damage, +1% crit chance.'},
   {id:'w_ironsword', name:'Iron Sword', icon:'&#9876;', slot:'weapon', rarity:'uncommon',
     bonuses:{atk:4,crit:0.02}, desc:'+4 damage, +2% crit chance.'},
+  {id:'w_rapier', name:'Steel Rapier', icon:'&#128302;', slot:'weapon', rarity:'uncommon',
+    bonuses:{atk:3,dodge:0.02}, desc:'+3 damage, +2% dodge chance.'},
   {id:'w_flameblade', name:'Flameforged Blade', icon:'&#128293;', slot:'weapon', rarity:'rare',
     bonuses:{atk:7,critMult:0.1}, desc:'+7 damage, +0.1x crit damage.'},
+  {id:'w_stormcleaver', name:'Storm Cleaver', icon:'&#9889;', slot:'weapon', rarity:'rare',
+    bonuses:{atk:6,crit:0.03}, desc:'+6 damage, +3% crit chance.'},
   {id:'w_voidreaver', name:'Void Reaver', icon:'&#127993;', slot:'weapon', rarity:'epic',
     bonuses:{atk:12,crit:0.05}, desc:'+12 damage, +5% crit chance.'},
+  {id:'w_shadowfang', name:'Shadowfang Cleaver', icon:'&#128123;', slot:'weapon', rarity:'epic',
+    bonuses:{atk:10,critMult:0.15}, desc:'+10 damage, +0.15x crit damage.'},
   {id:'w_dragonfang', name:'Dragonfang Edge', icon:'&#128009;', slot:'weapon', rarity:'legendary',
     bonuses:{atk:18,crit:0.05,critMult:0.2}, desc:'+18 damage, +5% crit, +0.2x crit damage.'},
+  {id:'w_worldsplitter', name:'Worldsplitter', icon:'&#9670;', slot:'weapon', rarity:'legendary',
+    bonuses:{atk:15,crit:0.08,dodge:0.02}, desc:'+15 damage, +8% crit, +2% dodge.'},
 
-  // ---- Armor (bonus: hp, armor, dodge) ----
+  // ---- Armor (bonus: hp, armor, dodge, luck, crit) ----
   {id:'a_leather', name:'Leather Vest', icon:'&#128084;', slot:'armor', rarity:'common',
     bonuses:{hp:10,armor:0.01}, desc:'+10 max HP, +1% damage reduction.'},
-  {id:'a_chain', name:'Chainmail', icon:'&#9malfunctionerreur;', slot:'armor', rarity:'uncommon',
+  {id:'a_padded', name:'Padded Jacket', icon:'&#129513;', slot:'armor', rarity:'common',
+    bonuses:{hp:8,dodge:0.01}, desc:'+8 max HP, +1% dodge chance.'},
+  {id:'a_chain', name:'Chainmail', icon:'&#9993;', slot:'armor', rarity:'uncommon',
     bonuses:{hp:20,armor:0.02}, desc:'+20 max HP, +2% damage reduction.'},
+  {id:'a_scale', name:'Scale Mail', icon:'&#128375;', slot:'armor', rarity:'uncommon',
+    bonuses:{hp:18,armor:0.015}, desc:'+18 max HP, +1.5% damage reduction.'},
   {id:'a_plate', name:'Plate of Warding', icon:'&#128737;', slot:'armor', rarity:'rare',
     bonuses:{hp:35,armor:0.04}, desc:'+35 max HP, +4% damage reduction.'},
+  {id:'a_runed', name:'Runed Cuirass', icon:'&#128220;', slot:'armor', rarity:'rare',
+    bonuses:{hp:28,armor:0.03,luck:0.02}, desc:'+28 max HP, +3% reduction, +2% gold gain.'},
   {id:'a_aegis', name:'Aegis Bulwark', icon:'&#9974;', slot:'armor', rarity:'epic',
     bonuses:{hp:55,armor:0.06}, desc:'+55 max HP, +6% damage reduction.'},
+  {id:'a_titanplate', name:'Titanplate', icon:'&#128737;', slot:'armor', rarity:'epic',
+    bonuses:{hp:45,armor:0.05,dodge:0.02}, desc:'+45 max HP, +5% reduction, +2% dodge.'},
   {id:'a_bastion', name:"Sovereign's Bastion", icon:'&#127984;', slot:'armor', rarity:'legendary',
     bonuses:{hp:80,armor:0.10,dodge:0.03}, desc:'+80 max HP, +10% reduction, +3% dodge.'},
+  {id:'a_emberproof', name:'Emberproof Aegis', icon:'&#128293;', slot:'armor', rarity:'legendary',
+    bonuses:{hp:65,armor:0.09,crit:0.02}, desc:'+65 max HP, +9% reduction, +2% crit chance.'},
 
   // ---- Trinkets (bonus: luck, heal, dodge, hybrid) ----
   {id:'t_lucky', name:'Lucky Charm', icon:'&#127808;', slot:'trinket', rarity:'common',
     bonuses:{luck:0.03}, desc:'+3% gold from victories.'},
+  {id:'t_copperring', name:'Copper Ring', icon:'&#128142;', slot:'trinket', rarity:'common',
+    bonuses:{luck:0.02,heal:2}, desc:'+2% gold gain, +2 Heal Pulse power.'},
   {id:'t_locket', name:"Healer's Locket", icon:'&#128142;', slot:'trinket', rarity:'uncommon',
     bonuses:{heal:8}, desc:'+8 Heal Pulse power.'},
+  {id:'t_vigor', name:'Vial of Vigor', icon:'&#129514;', slot:'trinket', rarity:'uncommon',
+    bonuses:{heal:6,hp:5}, desc:'+6 Heal Pulse power, +5 max HP.'},
   {id:'t_feather', name:"Windwalker's Feather", icon:'&#129413;', slot:'trinket', rarity:'rare',
     bonuses:{dodge:0.04}, desc:'+4% dodge chance.'},
+  {id:'t_evasion', name:'Ring of Evasion', icon:'&#128142;', slot:'trinket', rarity:'rare',
+    bonuses:{dodge:0.03,luck:0.02}, desc:'+3% dodge chance, +2% gold gain.'},
   {id:'t_sage', name:"Sage's Amulet", icon:'&#128302;', slot:'trinket', rarity:'epic',
     bonuses:{heal:15,luck:0.05}, desc:'+15 Heal Pulse power, +5% gold gain.'},
+  {id:'t_merchant', name:"Merchant's Seal", icon:'&#127890;', slot:'trinket', rarity:'epic',
+    bonuses:{luck:0.06,heal:5}, desc:'+6% gold gain, +5 Heal Pulse power.'},
   {id:'t_crown', name:'Crown of the Fallen King', icon:'&#128081;', slot:'trinket', rarity:'legendary',
-    bonuses:{atk:8,hp:25,luck:0.08}, desc:'+8 damage, +25 max HP, +8% gold gain.'}
+    bonuses:{atk:8,hp:25,luck:0.08}, desc:'+8 damage, +25 max HP, +8% gold gain.'},
+  {id:'t_phoenix', name:'Phoenix Feather', icon:'&#128293;', slot:'trinket', rarity:'legendary',
+    bonuses:{heal:12,dodge:0.02,luck:0.04}, desc:'+12 heal power, +2% dodge, +4% gold gain.'}
 ];
-// fix the mangled icon that could break the shield glyph above
-EQUIPMENT_POOL.find(i=>i.id==='a_chain').icon = '&#9993;';
 
 function itemById(id){ return EQUIPMENT_POOL.find(i=>i.id===id); }
+
+function gearLevelCost(def, level){
+  return Math.round(RARITY_BASE_COST[def.rarity] * Math.pow(1.32, level - 1));
+}
+function gearMultiplier(level){
+  return 1 + (Math.max(1,level) - 1) * 0.12;
+}
 
 const NORMAL_RARITY_WEIGHTS = {common:55,uncommon:28,rare:13,epic:3.5,legendary:0.5};
 const BOSS_RARITY_WEIGHTS   = {common:8, uncommon:24,rare:36,epic:24, legendary:8};
@@ -557,8 +602,8 @@ let cool = 0;
 let windCharges = 0;
 let quizActive = false; // true whenever a quiz/bonus-quiz box is on screen
 
-// equipment state: inventory is a list of {uid, id}; equipped maps slot -> uid or null
-let inventory = s.inventory || [];
+// equipment state: inventory is a list of {uid, id, level}; equipped maps slot -> uid or null
+let inventory = (s.inventory || []).map(i => ({ uid:i.uid, id:i.id, level: i.level || 1 }));
 let equipped = Object.assign({weapon:null, armor:null, trinket:null}, s.equipped || {});
 let uidCounter = s.uidCounter || 1;
 
@@ -672,7 +717,7 @@ const SHOP_ITEMS = [
 function costOf(item){ return item.baseCost + up[item.key]*item.step; }
 function powerCooldown(){ return Math.max(0, 2 - up.cool); }
 
-/* ---------- equipment bonus aggregation ---------- */
+/* ---------- equipment bonus aggregation (now level-scaled) ---------- */
 function equipTotals(){
   const t = {atk:0,hp:0,heal:0,crit:0,armor:0,luck:0,critMult:0,dodge:0};
   ['weapon','armor','trinket'].forEach(slot=>{
@@ -682,7 +727,8 @@ function equipTotals(){
     if(!inst) return;
     const def = itemById(inst.id);
     if(!def) return;
-    Object.keys(def.bonuses).forEach(k=>{ t[k] = (t[k]||0) + def.bonuses[k]; });
+    const mult = gearMultiplier(inst.level || 1);
+    Object.keys(def.bonuses).forEach(k=>{ t[k] = (t[k]||0) + def.bonuses[k]*mult; });
   });
   return t;
 }
@@ -875,7 +921,10 @@ function renderGear(){
     if(def){ box.style.borderColor = `var(--r-${def.rarity})`; }
     box.innerHTML = `
       <div class="slot-label">${SLOT_LABELS[slot]}</div>
-      <div class="slot-item-name">${def ? def.icon+' '+def.name : 'Empty'}</div>
+      <div class="slot-item-name">
+        <span>${def ? def.icon+' '+def.name : 'Empty'}</span>
+        ${def ? `<span class="slot-item-lvl">Lv ${inst.level}/${GEAR_MAX_LEVEL}</span>` : ''}
+      </div>
     `;
     const unBtn = document.createElement('button');
     unBtn.className = 'unequip-btn';
@@ -903,22 +952,37 @@ function renderGear(){
   sorted.forEach(inst=>{
     const def = itemById(inst.id);
     const isEquipped = equipped[def.slot] === inst.uid;
+    const isMaxed = inst.level >= GEAR_MAX_LEVEL;
+    const lvlCost = gearLevelCost(def, inst.level);
+
     const div = document.createElement('div');
     div.className = 'inv-item';
     div.style.borderLeftColor = `var(--r-${def.rarity})`;
     div.innerHTML = `
       <div class="info">
-        <div class="name">${def.icon} ${def.name}<span class="rarity-tag" style="color:var(--r-${def.rarity})">${RARITY_LABEL[def.rarity]}</span></div>
+        <div class="name">${def.icon} ${def.name}<span class="rarity-tag" style="color:var(--r-${def.rarity})">${RARITY_LABEL[def.rarity]}</span><span class="lvl-tag">Lv ${inst.level}/${GEAR_MAX_LEVEL}</span></div>
         <div class="slot-tag">${SLOT_LABELS[def.slot]}</div>
         <div class="desc">${def.desc}</div>
       </div>
     `;
-    const btn = document.createElement('button');
-    btn.className = 'equip-btn' + (isEquipped ? ' equipped' : '');
-    btn.textContent = isEquipped ? 'Equipped' : 'Equip';
-    btn.disabled = isEquipped || quizActive;
-    btn.onclick = ()=> equipItem(inst.uid);
-    div.appendChild(btn);
+    const actions = document.createElement('div');
+    actions.className = 'inv-actions';
+
+    const equipBtn = document.createElement('button');
+    equipBtn.className = 'equip-btn' + (isEquipped ? ' equipped' : '');
+    equipBtn.textContent = isEquipped ? 'Equipped' : 'Equip';
+    equipBtn.disabled = isEquipped || quizActive;
+    equipBtn.onclick = ()=> equipItem(inst.uid);
+    actions.appendChild(equipBtn);
+
+    const lvlBtn = document.createElement('button');
+    lvlBtn.className = 'levelup-btn' + (isMaxed ? ' maxed' : '');
+    lvlBtn.textContent = isMaxed ? 'MAX' : `Lvl Up (${lvlCost}\u2666)`;
+    lvlBtn.disabled = isMaxed || gold < lvlCost || quizActive;
+    lvlBtn.onclick = ()=> levelUpGear(inst.uid);
+    actions.appendChild(lvlBtn);
+
+    div.appendChild(actions);
     invList.appendChild(div);
   });
 }
@@ -946,6 +1010,22 @@ function unequip(slot){
   ui();
 }
 
+function levelUpGear(uid){
+  if(quizActive) return;
+  const inst = inventory.find(x=>x.uid===uid);
+  if(!inst) return;
+  const def = itemById(inst.id);
+  if(inst.level >= GEAR_MAX_LEVEL) return;
+  const cost = gearLevelCost(def, inst.level);
+  if(gold < cost) return;
+  const wasFull = HP >= maxHP();
+  gold -= cost;
+  inst.level += 1;
+  if(wasFull) HP = maxHP();
+  log(`<b class="bonus-text">${def.icon} ${def.name}</b> leveled up to Lv ${inst.level}!`, true);
+  ui();
+}
+
 /* ---------- loot drops ---------- */
 function dropEquipment(bossFight){
   const weights = bossFight ? BOSS_RARITY_WEIGHTS : NORMAL_RARITY_WEIGHTS;
@@ -954,7 +1034,7 @@ function dropEquipment(bossFight){
   if(pool.length===0) pool = EQUIPMENT_POOL;
   const def = pool[Math.floor(Math.random()*pool.length)];
   const uid = uidCounter++;
-  inventory.push({uid, id:def.id});
+  inventory.push({uid, id:def.id, level:1});
   log(`<b class="drop-${def.rarity}">${def.icon} ${def.name} dropped!</b> (${RARITY_LABEL[def.rarity]} ${SLOT_LABELS[def.slot]})`, true);
 }
 
@@ -1145,7 +1225,7 @@ function afterVictory(){
   }
 }
 
-/* ---------- lose-quiz (forces a retry, no reward) ---------- */
+/* ---------- lose-quiz (now grants a free upgrade on a correct answer) ---------- */
 function quizGate(){
   quizActive = true;
   const box=document.getElementById('quiz');
@@ -1164,9 +1244,14 @@ function quizGate(){
     b.textContent=x.a[i];
     b.onclick=()=>{
       if(i===x.c){
-        box.style.display='none';
-        quizActive = false;
-        newEnemy();
+        ans.querySelectorAll('button').forEach(btn=>btn.disabled=true);
+        awardFreeUpgrade();
+        log('<b class="bonus-text">Correct!</b> You catch your breath and find a spare upgrade before the next fight.', true);
+        setTimeout(()=>{
+          box.style.display='none';
+          quizActive = false;
+          newEnemy();
+        }, 900);
       } else {
         alert('Try again');
       }
@@ -1218,12 +1303,12 @@ function awardFreeUpgrade(){
     const item = candidates[Math.floor(Math.random()*candidates.length)];
     up[item.key] += 1;
     item.apply();
-    log(`<b class="bonus-text">Wave Trial passed!</b> Free upgrade: ${item.icon} ${item.name}`, true);
+    log(`<b class="bonus-text">Free upgrade: ${item.icon} ${item.name}</b>`, true);
   } else {
     const key = Object.keys(stats)[Math.floor(Math.random()*Object.keys(stats).length)];
     grantFreeStat(key);
     const name = STAT_ITEMS.find(x=>x.key===key).name;
-    log(`<b class="bonus-text">Wave Trial passed!</b> Free stat point: ${name}`, true);
+    log(`<b class="bonus-text">Free stat point: ${name}</b>`, true);
   }
   ui();
 }
