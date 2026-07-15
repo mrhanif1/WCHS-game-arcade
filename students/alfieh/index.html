@@ -275,6 +275,7 @@
         this.baseY = y;
         this.originX = x;
         this.originY = y;
+        this.respawnTimer = 0;
       }
 
       update(dt) {
@@ -286,8 +287,20 @@
         if (this.type === "falling") {
           if (this.falling) {
             this.fallTimer += dt;
-            this.y += dt * 240;
-            if (this.fallTimer > 1.2) this.active = false;
+            this.y += dt * 120;
+            if (this.fallTimer > 2) {
+              this.active = false;
+              this.respawnTimer = 3;
+            }
+          } else if (this.respawnTimer > 0) {
+            this.respawnTimer -= dt;
+            if (this.respawnTimer <= 0) {
+              this.y = this.originY;
+              this.falling = false;
+              this.fallTimer = 0;
+              this.active = true;
+              this.respawnTimer = 0;
+            }
           }
         }
         if (this.type === "rotating") {
