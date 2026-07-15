@@ -568,8 +568,26 @@ function enterBossPhase(enemy, phase, label) {
   playSound('boss');
 }
 function unlockAchievement(name) { if (!state.achievements.includes(name)) { state.achievements.push(name); showOverlay('Achievement Unlocked', `${name} is recorded in your fortress history.`, [{ label: 'Continue', action: hideOverlay }]); } }
-function showOverlay(title, body, actions = []) { ui.overlayTitle.textContent = title; ui.overlayBody.innerHTML = body; ui.overlayActions.innerHTML = ''; actions.forEach(action => { const btn = document.createElement('button'); btn.className = 'action-btn'; btn.textContent = action.label; btn.onclick = action.action; ui.overlayActions.appendChild(btn); }); ui.overlay.classList.remove('hidden'); }
-function hideOverlay() { ui.overlay.classList.add('hidden'); }
+function showOverlay(title, body, actions = []) {
+  ui.overlayTitle.textContent = title;
+  ui.overlayBody.innerHTML = body;
+  ui.overlayActions.innerHTML = '';
+  actions.forEach(action => {
+    const btn = document.createElement('button');
+    btn.className = 'action-btn';
+    btn.textContent = action.label;
+    btn.onclick = action.action;
+    ui.overlayActions.appendChild(btn);
+  });
+  ui.overlay.classList.remove('hidden');
+  state.paused = true;
+}
+function hideOverlay() {
+  ui.overlay.classList.add('hidden');
+  if (state.gameStarted) {
+    state.paused = false;
+  }
+}
 function placeTower(x, y, type) {
   const snapped = snapToGrid(x, y);
   const def = towerDefs.find(t => t.id === type);
@@ -643,7 +661,6 @@ function triggerRoundQuestion() {
   state.learning.currentQuestion = question;
   state.learning.selectedOption = null;
   state.learning.challengeActive = true;
-  state.learning.answeredCount += 1;
   ui.feedbackBox.textContent = 'Round complete! Answer this bonus question to earn a stronger reward.';
   ui.feedbackBox.className = 'feedback-box good';
   renderLearningUi();
@@ -684,11 +701,31 @@ function update(dt) {
         createEnemy(enemyDefs[2]);
       }
     }
-    if (enemy.abilities.includes('regen') && enemy.hp < enemy.maxHp) { enemy.regenTimer += 1; if (enemy.regenTimer > 90) { enemy.hp = Math.min(enemy.maxHp, enemy.hp + 3); enemy.regenTimer = 0; } }
-    const targetPoint = path[enemy.pathIndex + 1] || path[path.length - 1]; const dx = targetPoint.x - enemy.x; const dy = targetPoint.y - enemy.y; const dist = Math.hypot(dx, dy);
-    if (dist < 2) { enemy.pathIndex += 1; if (enemy.pathIndex >= path.length - 1) { state.health -= 1; enemy.alive = false; state.enemies = state.enemies.filter(e => e.id !== enemy.id); break; } }
-    else { const move = enemy.speed * dt * 0.06; enemy.x += (dx / dist) * move; enemy.y += (dy / dist) * move; }
+    if (enemy.abilities.includes('regen') && enemy.hp < enemy.maxHp) {
+      enemy.regenTimer += 1;
+      if (enemy.regenTimer > 90) {
+        enemy.hp = Math.min(enemy.maxHp, enemy.hp + 3);
+        enemy.regenTimer = 0;
+      }
+    }
+    const targetPoint = path[enemy.pathIndex + 1] || path[path.length - 1];
+    const dx = targetPoint.x - enemy.x;
+    const dy = targetPoint.y - enemy.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 2) {
+      enemy.pathIndex += 1;
+      if (enemy.pathIndex >= path.length - 1) {
+        state.health -= 1;
+        enemy.alive = false;
+        continue;
+      }
+    } else {
+      const move = enemy.speed * dt * 0.06;
+      enemy.x += (dx / dist) * move;
+      enemy.y += (dy / dist) * move;
+    }
   }
+  state.enemies = state.enemies.filter((enemy) => enemy.alive);
   for (const projectile of state.projectiles) { projectile.life -= 1; projectile.x += (projectile.tx - projectile.x) * 0.2; projectile.y += (projectile.ty - projectile.y) * 0.2; if (projectile.life <= 0) projectile.dead = true; }
   state.projectiles = state.projectiles.filter(p => !p.dead);
   state.effects = state.effects.filter(e => e.life > 0).map(e => ({ ...e, life: e.life - 1, x: e.x + e.vx, y: e.y + e.vy, vx: e.vx * 0.95, vy: e.vy * 0.95 }));
@@ -1077,9 +1114,9 @@ function renderLeaderboard() {
     ui.leaderboardList.appendChild(row);
   });
 }
-function handleCellClick(event) {
-  if (event.type === 'pointerdown' && event.pointerType === 'mouse' && event.button !== 0) return;
-  if (event.type === 'click' && event.button !== 0) return;
+function handleFieldClick(event) {
+  if (event.pointerType === 'mouse' && event.button !== 0) return;
+  if (!event.target.closest || !event.target.closest('canvas')) return;
   event.preventDefault();
   const point = screenToWorld(event.clientX, event.clientY);
   const snapped = snapToGrid(point.x, point.y);
@@ -1090,10 +1127,8 @@ function handleCellClick(event) {
       state.selectedTowerType = null;
       state.pendingTowerHint = 'Tower placed. Pick another or continue defending.';
       state.selectedTower = null;
-      updateUi();
-    } else {
-      updateUi();
     }
+    updateUi();
   } else {
     const found = state.towers.find(t => Math.hypot(t.x - snapped.x, t.y - snapped.y) < 24);
     if (found) {
@@ -1103,8 +1138,7 @@ function handleCellClick(event) {
     }
   }
 }
-canvasShell.addEventListener('pointerdown', handleCellClick);
-canvasShell.addEventListener('click', handleCellClick);
+canvas.addEventListener('pointerdown', handleFieldClick);
 canvas.addEventListener('contextmenu', event => event.preventDefault());
 canvas.addEventListener('pointermove', event => {
   const point = screenToWorld(event.clientX, event.clientY);
